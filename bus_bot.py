@@ -25,15 +25,42 @@ outram_schedule = [
 
 # Function to display disclaimer when a new user joins
 def start(update: Update, context: CallbackContext) -> None:
+    introduction = (
+        "Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive.\n"
+        "Commands you may try:\n"
+        "/location"
+        "/schedule"
+    )
     disclaimer = (
-        "Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive. Please note:\n"
+        "Please note:\n"
         "* Bus timings are estimated and subjected to traffic conditions.\n"
         "* Residents are advised to be at least 5 to 8 minutes early at the designated alight/pickup points but do expect some delays especially during peak hours.\n"
         "* For the safety of passengers, standing, heavy, lengthy & bulky items in the bus are not allowed.\n"
         "* The bus will only stop at the designated stops.\n"
         "* No waiting, parking/holding of buses are allowed, as such facilities are meant for boarding and alighting activities only."
     )
+    update.message.reply_text(introduction)
     update.message.reply_text(disclaimer)
+
+# Function to prompt user for location schedule they want
+def prompt_schedule(update: Update, context: CallbackContext) -> None:
+    options = ["ASR Schedule", "Outram MRT Schedule"]
+    keyboard = [[telegram.KeyboardButton(option)] for option in options]
+    reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+
+    update.message.reply_text("Which one you need?", reply_markup=reply_markup)
+
+# Function to return schedule
+def get_schedule(update: Update, context: CallbackContext) -> None:
+
+    # Determine the location based on the user's response
+    location_schedule = update.message.text.lower()
+    if location_schedule == "asr schedule":
+        schedule = asr_schedule
+    elif location_schedule == "outram mrt schedule":
+        schedule = outram_schedule
+    
+    update.message.reply_text(f"{location_schedule}: {schedule}")
 
 # Function to prompt user for location
 def prompt_location(update: Update, context: CallbackContext) -> None:
@@ -91,8 +118,10 @@ def main() -> None:
 
     # Add command and message handlers
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("schedule", prompt_schedule))
+    dp.add_handler(CommandHandler("location", prompt_location))
+    dp.add_handler(MessageHandler(Filters.text(["ASR Schedule", "Outram MRT Schedule"]), get_schedule))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, next_bus_time))
-    dp.add_handler(MessageHandler(Filters.command, prompt_location))
 
     # Start the Bot
     updater.start_polling()
@@ -102,4 +131,3 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
-
