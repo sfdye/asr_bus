@@ -5,7 +5,7 @@ import datetime
 import pytz
 import os 
 
-TOKEN = os.getenv('TOKEN') || ""
+TOKEN = os.getenv('TOKEN')
 
 # Bus schedules for ASR and Outram MRT
 asr_schedule = [
