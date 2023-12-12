@@ -28,7 +28,7 @@ def start(update: Update, context: CallbackContext) -> None:
     introduction = (
         "Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive.\n"
         "Commands you may try:\n"
-        "/location"
+        "/location \n"
         "/schedule"
     )
     disclaimer = (
