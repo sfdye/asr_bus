@@ -3,9 +3,9 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import datetime
 import pytz
+import os 
 
-# Replace 'YOUR_BOT_TOKEN' with the token you obtained from BotFather
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = os.getenv('TOKEN') || ""
 
 # Bus schedules for ASR and Outram MRT
 asr_schedule = [
