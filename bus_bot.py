@@ -2,6 +2,7 @@ import telegram
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import datetime
+import pytz
 
 # Replace 'YOUR_BOT_TOKEN' with the token you obtained from BotFather
 TOKEN = 'YOUR_BOT_TOKEN'
@@ -44,7 +45,9 @@ def prompt_location(update: Update, context: CallbackContext) -> None:
 
 # Function to calculate and return the time until the next bus
 def next_bus_time(update: Update, context: CallbackContext) -> None:
-    current_time = datetime.datetime.now().time()
+    # Get the current time in the Singapore time zone
+    singapore_timezone = pytz.timezone('Asia/Singapore')
+    current_time = datetime.datetime.now(singapore_timezone).time()
 
     # Determine the location based on the user's response
     user_location = update.message.text.lower()
