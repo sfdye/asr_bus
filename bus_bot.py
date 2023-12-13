@@ -20,7 +20,7 @@ asr_schedule = [
 outram_schedule = [
     "08:04", "08:34", "09:04", "09:34", "10:04", "10:39", "11:09", "11:39",
     "12:09", "12:39", "13:09", "14:24", "14:54", "15:24", "15:54", "16:24",
-    "16:54", "17:24", "17:54", "18:24", "18:54", "19:24", "19:54"
+    "16:54", "17:44", "18:14", "18:44", "19:14", "19:44"
 ]
 
 # Function to display disclaimer when a new user joins
@@ -29,7 +29,8 @@ def start(update: Update, context: CallbackContext) -> None:
         "Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive.\n"
         "Commands you may try:\n"
         "/location \n"
-        "/schedule"
+        "/schedule \n"
+        "Click on https://asr-bus.onrender.com/ if I am not responsive."
     )
     disclaimer = (
         "Please note:\n"
