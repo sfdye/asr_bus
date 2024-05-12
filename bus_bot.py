@@ -1,5 +1,6 @@
 import telegram
-from telegram import Update
+from telegram import ParseMode, Update
+
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import datetime
 import pytz
@@ -23,25 +24,28 @@ outram_schedule = [
     "16:54", "17:44", "18:14", "18:44", "19:14", "19:44"
 ]
 
+intro_text = '''
+Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive\.
+    
+Commands you may try:
+/location
+/schedule
+Click on https://asr\-bus\.onrender\.com/ if I am not responsive\.
+'''
+
 # Function to display disclaimer when a new user joins
 def start(update: Update, context: CallbackContext) -> None:
-    introduction = (
-        "Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive.\n"
-        "Commands you may try:\n"
-        "/location \n"
-        "/schedule \n"
-        "Click on https://asr-bus.onrender.com/ if I am not responsive."
-    )
-    disclaimer = (
-        "Please note:\n"
-        "* Bus timings are estimated and subjected to traffic conditions.\n"
-        "* Residents are advised to be at least 5 to 8 minutes early at the designated alight/pickup points but do expect some delays especially during peak hours.\n"
-        "* For the safety of passengers, standing, heavy, lengthy & bulky items in the bus are not allowed.\n"
-        "* The bus will only stop at the designated stops.\n"
-        "* No waiting, parking/holding of buses are allowed, as such facilities are meant for boarding and alighting activities only."
-    )
-    update.message.reply_text(introduction)
-    update.message.reply_text(disclaimer)
+    introduction = intro_text
+    disclaimer = '''
+        Please note:
+        * Bus timings are estimated and subjected to traffic conditions\.
+        * Residents are advised to be at least 5 to 8 minutes early at the designated alight/pickup points but do expect some delays especially during peak hours\.
+        * For the safety of passengers, standing, heavy, lengthy & bulky items in the bus are not allowed\.
+        * The bus will only stop at the designated stops\.
+        * No waiting, parking/holding of buses are allowed, as such facilities are meant for boarding and alighting activities only\.
+    '''
+    update.message.reply_text(introduction, parse_mode=ParseMode.MARKDOWN_V2)
+    update.message.reply_text(disclaimer, parse_mode=ParseMode.MARKDOWN_V2)
 
 # Function to prompt user for location schedule they want
 def prompt_schedule(update: Update, context: CallbackContext) -> None:
@@ -56,12 +60,12 @@ def get_schedule(update: Update, context: CallbackContext) -> None:
 
     # Determine the location based on the user's response
     location_schedule = update.message.text.lower()
-    if location_schedule == "asr schedule":
-        schedule = asr_schedule
-    elif location_schedule == "outram mrt schedule":
-        schedule = outram_schedule
-    
-    update.message.reply_text(f"{location_schedule}: {schedule}")
+    schedule = asr_schedule if location_schedule == "asr schedule" else outram_schedule
+    # Convert schedule to rich output format
+    message_text = "\n".join(schedule)
+    update.message.reply_text(
+        message_text, parse_mode=ParseMode.MARKDOWN_V2
+    )
 
 # Function to prompt user for location
 def prompt_location(update: Update, context: CallbackContext) -> None:
@@ -84,7 +88,7 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
     elif user_location == "outram mrt":
         schedule = outram_schedule
     else:
-        update.message.reply_text("Sorry, I didn't understand your location. Please choose either ASR or Outram MRT.")
+        update.message.reply_text("Sorry, I didn't understand your location\. Please choose either ASR or Outram MRT\.")
         return
 
     # Find the next bus time
@@ -93,7 +97,7 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
         if current_time < bus_time_obj:
             time_until_next_bus = (datetime.datetime.combine(datetime.date.today(), bus_time_obj) -
                                    datetime.datetime.combine(datetime.date.today(), current_time)).seconds // 60
-            update.message.reply_text(f"The next {user_location} bus will arrive in {time_until_next_bus} minutes.")
+            update.message.reply_text(f"The next {user_location} bus will arrive in *{time_until_next_bus} minutes*\.", parse_mode=ParseMode.MARKDOWN_V2)
 
             # Find the time for the bus following the next bus
             index_of_next_bus = schedule.index(bus_time_str)
@@ -102,10 +106,10 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
                 time_until_following_bus = (datetime.datetime.combine(datetime.date.today(), following_bus_time) -
                                             datetime.datetime.combine(datetime.date.today(), current_time)).seconds // 60
                 update.message.reply_text(
-                    f"The following {user_location} bus will arrive in {time_until_following_bus} minutes."
+                    f"The following {user_location} bus will arrive in *{time_until_following_bus} minutes*\.", parse_mode=ParseMode.MARKDOWN_V2
                 )
             else:
-                update.message.reply_text(f"There is no following {user_location} bus for today.")
+                update.message.reply_text(f"There is no following {user_location} bus for today\.")
             return
 
 
