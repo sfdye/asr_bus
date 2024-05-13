@@ -4,22 +4,24 @@ import os
 import pytz
 import telegram
 from dotenv import load_dotenv
-from google.cloud import datastore
+from google.cloud import secretmanager_v1beta2
 from telegram import ParseMode, Update
-from telegram.ext import (
-    CallbackContext,
-    CommandHandler,
-    Filters,
-    MessageHandler,
-    Updater,
-)
+from telegram.ext import (CallbackContext, CommandHandler, Filters,
+                          MessageHandler, Updater)
 
 load_dotenv(override=True)  # take environment variables
 
+# Create a client
+client = secretmanager_v1beta2.SecretManagerServiceClient()
 
-client = datastore.Client()
-key = client.key("Secret", "TOKEN")
-TOKEN = client.get(key)
+# Initialize request argument(s)
+request = secretmanager_v1beta2.AccessSecretVersionRequest(
+    name="projects/7582543974/secrets/TOKEN/versions/latest"
+)
+
+# Make the request
+response = client.access_secret_version(request=request)
+TOKEN = response.payload.data.decode("UTF-8")
 
 # Bus schedules for ASR and Outram MRT
 asr_schedule = [
