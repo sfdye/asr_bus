@@ -13,7 +13,7 @@ from telegram.ext import (
     Updater,
 )
 
-load_dotenv()  # take environment variables
+load_dotenv(override=True)  # take environment variables
 
 TOKEN = os.getenv("TOKEN")
 
