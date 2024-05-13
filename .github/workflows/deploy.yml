@@ -1,3 +1,10 @@
+name: Deploy TO GAE
+
+on:
+  push:
+    branches:
+      - master
+
 jobs:
   job_id:
     permissions:
@@ -14,7 +21,3 @@ jobs:
 
     - id: 'deploy'
       uses: 'google-github-actions/deploy-appengine@v2'
-
-    # Example of using the output
-    - id: 'test'
-      run: 'curl "${{ steps.deploy.outputs.version_url }}"'
