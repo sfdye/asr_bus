@@ -2,6 +2,6 @@
 telegram bus schedule bot
 
 ```
-pip install python-telegram-bot==13.0
+pip install -r requirements.txt
 python bus_bot.py
 ```

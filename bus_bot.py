@@ -1,10 +1,14 @@
-import telegram
-from telegram import ParseMode, Update
-
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import datetime
 import pytz
 import os 
+
+from dotenv import load_dotenv
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+import telegram
+from telegram import ParseMode, Update
+
+
+load_dotenv()  # take environment variables
 
 TOKEN = os.getenv('TOKEN')
 
