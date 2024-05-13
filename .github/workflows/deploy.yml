@@ -18,8 +18,14 @@ jobs:
     - id: 'auth'
       uses: 'google-github-actions/auth@v2'
       with:
+        create_credentials_file: 'true'
         workload_identity_provider: 'projects/7582543974/locations/global/workloadIdentityPools/my-pool/providers/github'
         project_id: asr-bus-bot
+    
+    - id: 'gcloud'
+      run: |-
+        gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+        gcloud services list
 
     - id: 'deploy'
       uses: 'google-github-actions/deploy-appengine@v2'
