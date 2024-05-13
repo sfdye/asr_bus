@@ -1,4 +1,4 @@
-name: Deploy TO GAE
+name: Deploy To GAE
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
       uses: 'google-github-actions/auth@v2'
       with:
         workload_identity_provider: 'projects/7582543974/locations/global/workloadIdentityPools/my-pool/providers/github'
-        project_id: 7582543974
+        project_id: asr-bus-bot
 
     - id: 'deploy'
       uses: 'google-github-actions/deploy-appengine@v2'
