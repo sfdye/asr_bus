@@ -18,7 +18,8 @@ load_dotenv(override=True)  # take environment variables
 
 
 client = datastore.Client()
-TOKEN = client.key("Secret", "TOKEN")
+key = client.key("Secret", "TOKEN")
+TOKEN = client.get(key)
 
 # Bus schedules for ASR and Outram MRT
 asr_schedule = [
