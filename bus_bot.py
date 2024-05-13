@@ -4,6 +4,7 @@ import os
 import pytz
 import telegram
 from dotenv import load_dotenv
+from google.cloud import datastore
 from telegram import ParseMode, Update
 from telegram.ext import (
     CallbackContext,
@@ -15,7 +16,9 @@ from telegram.ext import (
 
 load_dotenv(override=True)  # take environment variables
 
-TOKEN = os.getenv("TOKEN")
+
+client = datastore.Client()
+TOKEN = client.key("Secret", "TOKEN")
 
 # Bus schedules for ASR and Outram MRT
 asr_schedule = [
