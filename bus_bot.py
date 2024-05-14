@@ -23,7 +23,7 @@ try:
     # Make the request
     response = client.access_secret_version(request=request)
     TOKEN = response.payload.data.decode("UTF-8")
-except ImportError:
+except Exception:
     pass
 
 load_dotenv(override=True)  # take environment variables
