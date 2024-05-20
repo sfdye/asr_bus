@@ -1,6 +1,6 @@
 python-telegram-bot==13.0.0
 urllib3==1.26.15
 python-dotenv==1.0.1
-google-cloud-secret-manager==2.20.0
+
 
 
