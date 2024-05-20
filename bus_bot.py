@@ -69,7 +69,6 @@ Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buse
 Commands you may try:
 /location
 /schedule
-Click on https://asr-bus.onrender.com/ if I am not responsive.
 """
 
 
