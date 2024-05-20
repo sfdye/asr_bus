@@ -64,12 +64,12 @@ outram_schedule = [
 ]
 
 intro_text = """
-Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive\.
+Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive.
     
 Commands you may try:
 /location
 /schedule
-Click on https://asr\-bus\.onrender\.com/ if I am not responsive\.
+Click on https://asr-bus.onrender.com/ if I am not responsive.
 """
 
 
@@ -78,14 +78,14 @@ def start(update: Update, context: CallbackContext) -> None:
     introduction = intro_text
     disclaimer = """
         Please note:
-        * Bus timings are estimated and subjected to traffic conditions\.
-        * Residents are advised to be at least 5 to 8 minutes early at the designated alight/pickup points but do expect some delays especially during peak hours\.
-        * For the safety of passengers, standing, heavy, lengthy & bulky items in the bus are not allowed\.
-        * The bus will only stop at the designated stops\.
-        * No waiting, parking/holding of buses are allowed, as such facilities are meant for boarding and alighting activities only\.
+        * Bus timings are estimated and subjected to traffic conditions.
+        * Residents are advised to be at least 5 to 8 minutes early at the designated alight/pickup points but do expect some delays especially during peak hours.
+        * For the safety of passengers, standing, heavy, lengthy & bulky items in the bus are not allowed.
+        * The bus will only stop at the designated stops.
+        * No waiting, parking/holding of buses are allowed, as such facilities are meant for boarding and alighting activities only.
     """
-    update.message.reply_text(introduction, parse_mode=ParseMode.MARKDOWN_V2)
-    update.message.reply_text(disclaimer, parse_mode=ParseMode.MARKDOWN_V2)
+    update.message.reply_text(introduction, parse_mode=ParseMode.HTML)
+    update.message.reply_text(disclaimer, parse_mode=ParseMode.HTML)
 
 
 # Function to prompt user for location schedule they want
@@ -105,7 +105,7 @@ def get_schedule(update: Update, context: CallbackContext) -> None:
     schedule = asr_schedule if location_schedule == "asr schedule" else outram_schedule
     # Convert schedule to rich output format
     message_text = "\n".join(schedule)
-    update.message.reply_text(message_text, parse_mode=ParseMode.MARKDOWN_V2)
+    update.message.reply_text(message_text, parse_mode=ParseMode.HTML)
 
 
 # Function to prompt user for location
@@ -131,7 +131,7 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
         schedule = outram_schedule
     else:
         update.message.reply_text(
-            "Sorry, I didn't understand your location\. Please choose either ASR or Outram MRT\."
+            "Sorry, I didn't understand your location. Please choose either ASR or Outram MRT."
         )
         return
 
@@ -144,8 +144,8 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
                 - datetime.datetime.combine(datetime.date.today(), current_time)
             ).seconds // 60
             update.message.reply_text(
-                f"The next {user_location} bus will arrive in *{time_until_next_bus} minutes*\.",
-                parse_mode=ParseMode.MARKDOWN_V2,
+                f"The next {user_location} bus will arrive in <b>{time_until_next_bus} minutes</b>.",
+                parse_mode=ParseMode.HTML,
             )
 
             # Find the time for the bus following the next bus
@@ -159,12 +159,12 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
                     - datetime.datetime.combine(datetime.date.today(), current_time)
                 ).seconds // 60
                 update.message.reply_text(
-                    f"The following {user_location} bus will arrive in *{time_until_following_bus} minutes*\.",
-                    parse_mode=ParseMode.MARKDOWN_V2,
+                    f"The following {user_location} bus will arrive in <b>{time_until_following_bus} minutes</b>.",
+                    parse_mode=ParseMode.HTML,
                 )
             else:
                 update.message.reply_text(
-                    f"There is no following {user_location} bus for today\."
+                    f"There is no following {user_location} bus for today."
                 )
             return
 
