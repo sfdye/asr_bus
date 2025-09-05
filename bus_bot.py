@@ -64,11 +64,22 @@ outram_schedule = [
 ]
 
 intro_text = """
-Hi neighbour, I’m a bot programmed to tell you the estimated time our ASR buses will arrive.
+Hi neighbour, I'm a bot programmed to tell you the estimated time our ASR buses will arrive.
     
 Commands you may try:
 /location
 /schedule
+"""
+
+# Service notice message to be added to all timing responses
+service_notice = """
+⚠️ <b>IMPORTANT</b>: Our beloved shuttle bus service ends <b>30 Sep 2025</b>! 
+
+💙 This service connects our community daily and <b>keeps our property attractive</b>. To keep it running, please:
+✓ Attend the upcoming EOGM/AGM
+✓ Vote to continue this essential service
+
+<b>Your voice matters for our community!</b> 🗳️
 """
 
 
@@ -105,6 +116,7 @@ def get_schedule(update: Update, context: CallbackContext) -> None:
     # Convert schedule to rich output format
     message_text = "\n".join(schedule)
     update.message.reply_text(message_text, parse_mode=ParseMode.HTML)
+    update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
 
 
 # Function to prompt user for location
@@ -161,16 +173,19 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
                     f"The following {user_location} bus will arrive in <b>{time_until_following_bus} minutes</b>.",
                     parse_mode=ParseMode.HTML,
                 )
+                update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
             else:
                 update.message.reply_text(
                     f"There is no following {user_location} bus for today."
                 )
+                update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
             return
 
     # If all buses have passed for the day
     update.message.reply_text(
         f"All {user_location} buses for today have already passed."
     )
+    update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
 
 
 # Set up the Telegram bot
