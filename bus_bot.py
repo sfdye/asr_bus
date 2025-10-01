@@ -82,9 +82,49 @@ service_notice = """
 <b>Your voice matters for our community!</b> 🗳️
 """
 
+# Warning message for when service is paused
+service_paused_warning = """
+🚌❌ <b>SHUTTLE BUS SERVICE CURRENTLY PAUSED</b> ❌🚌
+
+Our beloved shuttle bus service has ended as of <b>30 September 2025</b>.
+
+🗳️ <b>BUT THERE'S HOPE!</b> 🗳️
+
+📢 <b>UPCOMING EGM (EXTRAORDINARY GENERAL MEETING)</b>
+Your participation can bring back our shuttle bus service! 
+
+✅ <b>PLEASE VOTE IN THE UPCOMING EGM!</b>
+💙 <b>Your vote matters!</b> Together we can restore this essential community service that:
+   • Connects our residents daily
+   • Keeps our property attractive and valuable
+   • Serves our community's transport needs
+
+<b>🏘️ Our community needs YOUR voice to bring back our shuttle bus! 🗳️</b>
+
+Meanwhile, for alternative transport options:
+🚇 Public transport (MRT/Bus)
+🚗 Private transport
+🚕 Ride-hailing services
+
+<b>Don't forget: VOTE in the EGM to restore our shuttle bus service!</b> 💪
+"""
+
+
+def is_service_paused():
+    """Check if the shuttle bus service should be paused"""
+    singapore_timezone = pytz.timezone("Asia/Singapore")
+    current_date = datetime.datetime.now(singapore_timezone).date()
+    service_end_date = datetime.date(2025, 9, 30)
+    return current_date > service_end_date
+
 
 # Function to display disclaimer when a new user joins
 def start(update: Update, context: CallbackContext) -> None:
+    # Check if service is paused
+    if is_service_paused():
+        update.message.reply_text(service_paused_warning, parse_mode=ParseMode.HTML)
+        return
+        
     introduction = intro_text
     disclaimer = """
         Please note:
@@ -100,6 +140,11 @@ def start(update: Update, context: CallbackContext) -> None:
 
 # Function to prompt user for location schedule they want
 def prompt_schedule(update: Update, context: CallbackContext) -> None:
+    # Check if service is paused
+    if is_service_paused():
+        update.message.reply_text(service_paused_warning, parse_mode=ParseMode.HTML)
+        return
+        
     options = ["ASR Schedule", "Outram MRT Schedule"]
     keyboard = [[telegram.KeyboardButton(option)] for option in options]
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
@@ -109,6 +154,10 @@ def prompt_schedule(update: Update, context: CallbackContext) -> None:
 
 # Function to return schedule
 def get_schedule(update: Update, context: CallbackContext) -> None:
+    # Check if service is paused
+    if is_service_paused():
+        update.message.reply_text(service_paused_warning, parse_mode=ParseMode.HTML)
+        return
 
     # Determine the location based on the user's response
     location_schedule = update.message.text.lower()
@@ -121,6 +170,11 @@ def get_schedule(update: Update, context: CallbackContext) -> None:
 
 # Function to prompt user for location
 def prompt_location(update: Update, context: CallbackContext) -> None:
+    # Check if service is paused
+    if is_service_paused():
+        update.message.reply_text(service_paused_warning, parse_mode=ParseMode.HTML)
+        return
+        
     options = ["ASR", "Outram MRT"]
     keyboard = [[telegram.KeyboardButton(option)] for option in options]
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
@@ -130,6 +184,11 @@ def prompt_location(update: Update, context: CallbackContext) -> None:
 
 # Function to calculate and return the time until the next bus
 def next_bus_time(update: Update, context: CallbackContext) -> None:
+    # Check if service is paused
+    if is_service_paused():
+        update.message.reply_text(service_paused_warning, parse_mode=ParseMode.HTML)
+        return
+    
     # Get the current time in the Singapore time zone
     singapore_timezone = pytz.timezone("Asia/Singapore")
     current_time = datetime.datetime.now(singapore_timezone).time()
