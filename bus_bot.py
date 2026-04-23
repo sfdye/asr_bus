@@ -19,6 +19,8 @@ STOP_NAMES = {
     "harbourfront": "Harbourfront MRT Exit D",
 }
 
+STOP_EMOJIS = {"asr": "🏠", "outram_exit_6": "🚇", "outram_exit_7": "🚇", "harbourfront": "🛍️"}
+
 STOP_OFFSETS = {"asr": 0, "outram_exit_6": 6, "outram_exit_7": 8, "harbourfront": 10}
 
 TRIP_TYPE_STOPS = {
@@ -167,7 +169,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def schedule_inline_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"📍 {STOP_NAMES[k]}", callback_data=f"schedule:{k}")]
+        [InlineKeyboardButton(f"{STOP_EMOJIS[k]} {STOP_NAMES[k]}", callback_data=f"schedule:{k}")]
         for k in STOP_NAMES
     ])
 
@@ -218,7 +220,7 @@ def handle_schedule_callback(update: Update, context: CallbackContext) -> None:
 
 def location_inline_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"📍 {STOP_NAMES[k]}", callback_data=f"location:{k}")]
+        [InlineKeyboardButton(f"{STOP_EMOJIS[k]} {STOP_NAMES[k]}", callback_data=f"location:{k}")]
         for k in STOP_NAMES
     ])
 
