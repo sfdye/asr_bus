@@ -11,17 +11,16 @@ from bus_bot import (
     get_trips_for_day_type,
     add_minutes,
     minutes_until,
-    next_bus_time,
-    get_schedule,
+    build_next_bus_text,
+    build_schedule_text,
+    handle_location_callback,
+    handle_schedule_callback,
     prompt_location,
+    prompt_schedule,
     format_asr_schedule,
     format_stop_schedule,
+    STOP_NAMES,
     STOP_OFFSETS,
-    TRIP_DESTINATIONS,
-    SCHEDULE_BUTTONS,
-    SCHEDULE_BUTTON_MAP,
-    LOCATION_BUTTONS,
-    LOCATION_BUTTON_MAP,
 )
 
 
@@ -158,110 +157,163 @@ class TestDayType(unittest.TestCase):
         self.assertIsNone(get_trips_for_day_type("sunday"))
 
 
-class TestNextBusTime(unittest.TestCase):
-
-    def setUp(self):
-        self.mock_update = Mock()
-        self.mock_context = Mock()
-        self.mock_update.message.reply_text = Mock()
-
-    @patch('bus_bot.get_day_type', return_value="sunday")
-    def test_sunday_no_service(self, _):
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        call_args = self.mock_update.message.reply_text.call_args[0][0]
-        self.assertIn("sunday no bus lah", call_args.lower())
+class TestBuildNextBusText(unittest.TestCase):
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_next_bus_asr_morning(self, _, mock_now):
+    def test_next_bus_asr_morning(self, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 25)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("min" in c for c in calls))
-        self.assertTrue(any("Going to" in c for c in calls))
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("min", text)
+        self.assertIn("Going to", text)
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_all_buses_passed(self, _, mock_now):
+    def test_all_buses_passed(self, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(21, 0)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("no more bus" in c.lower() for c in calls))
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("no more bus", text.lower())
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_next_bus_harbourfront(self, _, mock_now):
+    def test_next_bus_harbourfront(self, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(10, 5)))
-        self.mock_update.message.text = "Harbourfront MRT Exit D"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("min" in c for c in calls))
+        text = build_next_bus_text("harbourfront", "weekday")
+        self.assertIn("min", text)
+
+
+class TestLocationInlineKeyboard(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_update = Mock()
+        self.mock_context = Mock()
 
     @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_invalid_location(self, _):
-        self.mock_update.message.text = "somewhere else"
-        next_bus_time(self.mock_update, self.mock_context)
-        call_args = self.mock_update.message.reply_text.call_args[0][0]
-        self.assertIn("Paiseh", call_args)
+    def test_prompt_location_sends_inline_keyboard(self, _):
+        self.mock_update.message.reply_text = Mock()
+        prompt_location(self.mock_update, self.mock_context)
+        call_kwargs = self.mock_update.message.reply_text.call_args[1]
+        reply_markup = call_kwargs.get("reply_markup")
+        self.assertIsNotNone(reply_markup)
+        buttons = [btn for row in reply_markup.inline_keyboard for btn in row]
+        self.assertEqual(len(buttons), len(STOP_NAMES))
+        callback_data = [btn.callback_data for btn in buttons]
+        for stop_key in STOP_NAMES:
+            self.assertIn(f"location:{stop_key}", callback_data)
+
+    @patch('bus_bot.get_day_type', return_value="sunday")
+    def test_prompt_location_sunday_no_service(self, _):
+        self.mock_update.message.reply_text = Mock()
+        prompt_location(self.mock_update, self.mock_context)
+        msg = self.mock_update.message.reply_text.call_args[0][0]
+        self.assertIn("sunday no bus lah", msg.lower())
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_case_insensitive(self, _, mock_now):
+    def test_handle_location_callback_edits_message(self, _, mock_now):
+        mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 25)))
+        query = Mock()
+        query.data = "location:asr"
+        self.mock_update.callback_query = query
+        handle_location_callback(self.mock_update, self.mock_context)
+        query.answer.assert_called_once()
+        query.edit_message_text.assert_called_once()
+        text = query.edit_message_text.call_args[0][0]
+        self.assertIn("min", text)
+
+    @patch('bus_bot.get_day_type', return_value="sunday")
+    def test_handle_location_callback_sunday(self, _):
+        query = Mock()
+        query.data = "location:asr"
+        self.mock_update.callback_query = query
+        handle_location_callback(self.mock_update, self.mock_context)
+        text = query.edit_message_text.call_args[0][0]
+        self.assertIn("sunday no bus lah", text.lower())
+
+    @patch('bus_bot.get_singapore_now')
+    @patch('bus_bot.get_day_type', return_value="weekday")
+    def test_handle_location_callback_keeps_inline_keyboard(self, _, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 0)))
-        self.mock_update.message.text = "outram park mrt exit 6"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("min" in c for c in calls))
+        query = Mock()
+        query.data = "location:outram_exit_6"
+        self.mock_update.callback_query = query
+        handle_location_callback(self.mock_update, self.mock_context)
+        call_kwargs = query.edit_message_text.call_args[1]
+        self.assertIn("reply_markup", call_kwargs)
 
 
-class TestGetSchedule(unittest.TestCase):
+class TestBuildScheduleText(unittest.TestCase):
 
-    def setUp(self):
-        self.mock_update = Mock()
-        self.mock_context = Mock()
-        self.mock_update.message.reply_text = Mock()
+    def test_asr_weekday_schedule(self):
+        text = build_schedule_text("asr", "weekday")
+        self.assertIn("07:20", text)
+        self.assertIn("Outram Park MRT", text)
+        self.assertIn("Harbourfront MRT Exit D", text)
+        self.assertIn("Weekday", text)
 
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_asr_schedule_display(self, _):
-        self.mock_update.message.text = "ASR Schedule"
-        get_schedule(self.mock_update, self.mock_context)
-        self.assertEqual(self.mock_update.message.reply_text.call_count, 2)
-        body = self.mock_update.message.reply_text.call_args_list[0][0][0]
-        self.assertIn("07:20", body)
-        self.assertIn("Outram Park MRT", body)
-        self.assertIn("Harbourfront MRT Exit D", body)
+    def test_harbourfront_weekday_schedule(self):
+        text = build_schedule_text("harbourfront", "weekday")
+        self.assertIn("Harbourfront MRT Exit D", text)
+        self.assertNotIn("07:20", text)
 
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_harbourfront_schedule_display(self, _):
-        self.mock_update.message.text = "Harbourfront MRT Exit D Schedule"
-        get_schedule(self.mock_update, self.mock_context)
-        body = self.mock_update.message.reply_text.call_args_list[0][0][0]
-        self.assertIn("Harbourfront MRT Exit D", body)
-        self.assertNotIn("07:20", body)
-
-    @patch('bus_bot.get_day_type', return_value="sunday")
-    def test_sunday_shows_weekday(self, _):
-        self.mock_update.message.text = "ASR Schedule"
-        get_schedule(self.mock_update, self.mock_context)
-        body = self.mock_update.message.reply_text.call_args_list[0][0][0]
-        self.assertIn("Weekday", body)
+    def test_saturday_schedule(self):
+        text = build_schedule_text("asr", "saturday")
+        self.assertIn("Saturday", text)
+        self.assertIn("09:00", text)
 
 
-class TestPromptLocation(unittest.TestCase):
+class TestScheduleInlineKeyboard(unittest.TestCase):
 
     def setUp(self):
         self.mock_update = Mock()
         self.mock_context = Mock()
+
+    @patch('bus_bot.get_day_type', return_value="weekday")
+    def test_prompt_schedule_sends_inline_keyboard(self, _):
         self.mock_update.message.reply_text = Mock()
+        prompt_schedule(self.mock_update, self.mock_context)
+        call_kwargs = self.mock_update.message.reply_text.call_args[1]
+        reply_markup = call_kwargs.get("reply_markup")
+        self.assertIsNotNone(reply_markup)
+        buttons = [btn for row in reply_markup.inline_keyboard for btn in row]
+        self.assertEqual(len(buttons), len(STOP_NAMES))
+        callback_data = [btn.callback_data for btn in buttons]
+        for stop_key in STOP_NAMES:
+            self.assertIn(f"schedule:{stop_key}", callback_data)
 
     @patch('bus_bot.get_day_type', return_value="sunday")
-    def test_sunday_no_service(self, _):
-        prompt_location(self.mock_update, self.mock_context)
-        call_args = self.mock_update.message.reply_text.call_args[0][0]
-        self.assertIn("sunday no bus lah", call_args.lower())
+    def test_prompt_schedule_sunday_message(self, _):
+        self.mock_update.message.reply_text = Mock()
+        prompt_schedule(self.mock_update, self.mock_context)
+        msg = self.mock_update.message.reply_text.call_args[0][0]
+        self.assertIn("Sunday no bus lah", msg)
+
+    @patch('bus_bot.get_day_type', return_value="weekday")
+    def test_handle_schedule_callback_edits_message(self, _):
+        query = Mock()
+        query.data = "schedule:asr"
+        self.mock_update.callback_query = query
+        handle_schedule_callback(self.mock_update, self.mock_context)
+        query.answer.assert_called_once()
+        query.edit_message_text.assert_called_once()
+        text = query.edit_message_text.call_args[0][0]
+        self.assertIn("07:20", text)
+        self.assertIn("Weekday", text)
+
+    @patch('bus_bot.get_day_type', return_value="sunday")
+    def test_handle_schedule_callback_sunday_shows_weekday(self, _):
+        query = Mock()
+        query.data = "schedule:asr"
+        self.mock_update.callback_query = query
+        handle_schedule_callback(self.mock_update, self.mock_context)
+        text = query.edit_message_text.call_args[0][0]
+        self.assertIn("Weekday", text)
+
+    @patch('bus_bot.get_day_type', return_value="weekday")
+    def test_handle_schedule_callback_keeps_inline_keyboard(self, _):
+        query = Mock()
+        query.data = "schedule:harbourfront"
+        self.mock_update.callback_query = query
+        handle_schedule_callback(self.mock_update, self.mock_context)
+        call_kwargs = query.edit_message_text.call_args[1]
+        self.assertIn("reply_markup", call_kwargs)
 
 
 class TestFormatting(unittest.TestCase):
@@ -281,17 +333,6 @@ class TestFormatting(unittest.TestCase):
         text = format_stop_schedule(weekday_trips, "outram_exit_6", weekday_breaks)
         self.assertIn("07:26", text)
         self.assertNotIn("→", text)
-
-
-class TestButtonMaps(unittest.TestCase):
-
-    def test_location_buttons_all_mapped(self):
-        for button in LOCATION_BUTTONS:
-            self.assertIn(button.lower(), LOCATION_BUTTON_MAP)
-
-    def test_schedule_buttons_all_mapped(self):
-        for button in SCHEDULE_BUTTONS:
-            self.assertIn(button.lower(), SCHEDULE_BUTTON_MAP)
 
 
 class TestScheduleAccuracy(unittest.TestCase):
@@ -369,110 +410,75 @@ class TestScheduleAccuracy(unittest.TestCase):
 
 class TestNextBusEdgeCases(unittest.TestCase):
 
-    def setUp(self):
-        self.mock_update = Mock()
-        self.mock_context = Mock()
-        self.mock_update.message.reply_text = Mock()
-
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_during_lunch_break_finds_next_trip(self, _, mock_now):
+    def test_during_lunch_break_finds_next_trip(self, mock_now):
         """At 12:30 (weekday lunch break 12:00-13:00), next ASR bus is 13:00."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(12, 30)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        first_reply = calls[0]
-        self.assertIn("30 min", first_reply)
-        self.assertIn("13:00", first_reply)
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("30 min", text)
+        self.assertIn("13:00", text)
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_last_bus_no_following(self, _, mock_now):
+    def test_last_bus_no_following(self, mock_now):
         """At 19:55, next ASR bus is 20:00 (last one) — no following bus."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(19, 55)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("5 min" in c for c in calls))
-        self.assertTrue(any("last bus already" in c.lower() for c in calls))
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("5 min", text)
+        self.assertIn("last bus already", text.lower())
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_next_bus_shows_following(self, _, mock_now):
+    def test_next_bus_shows_following(self, mock_now):
         """At 07:00, next bus is 07:20 and following is 07:40 — both shown."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 0)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("07:20" in c for c in calls))
-        self.assertTrue(any("07:40" in c for c in calls))
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("07:20", text)
+        self.assertIn("07:40", text)
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="saturday")
-    def test_saturday_next_bus(self, _, mock_now):
+    def test_saturday_next_bus(self, mock_now):
         """Saturday at 09:15, next ASR bus should be 09:30 (type B → Harbourfront)."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(9, 15)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        first_reply = calls[0]
-        self.assertIn("15 min", first_reply)
-        self.assertIn("Harbourfront", first_reply)
+        text = build_next_bus_text("asr", "saturday")
+        self.assertIn("15 min", text)
+        self.assertIn("Harbourfront", text)
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="saturday")
-    def test_saturday_all_buses_passed(self, _, mock_now):
+    def test_saturday_all_buses_passed(self, mock_now):
         """Saturday at 21:00, all buses should have passed."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(21, 0)))
-        self.mock_update.message.text = "Outram Park MRT Exit 6"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("no more bus" in c.lower() for c in calls))
+        text = build_next_bus_text("outram_exit_6", "saturday")
+        self.assertIn("no more bus", text.lower())
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_harbourfront_during_morning_no_service(self, _, mock_now):
+    def test_harbourfront_during_morning_no_service(self, mock_now):
         """Weekday at 08:30, no Harbourfront buses yet (first is 10:10)."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(8, 30)))
-        self.mock_update.message.text = "Harbourfront MRT Exit D"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        first_reply = calls[0]
-        self.assertIn("10:10", first_reply)
+        text = build_next_bus_text("harbourfront", "weekday")
+        self.assertIn("10:10", text)
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_asr_destination_alternates(self, _, mock_now):
+    def test_asr_destination_alternates(self, mock_now):
         """At 09:25, next ASR bus is 09:30 (A→Outram), following is 10:00 (B→Harbourfront)."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(9, 25)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertIn("Outram Park MRT", calls[0])
-        self.assertIn("Harbourfront MRT Exit D", calls[1])
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("Outram Park MRT", text)
+        self.assertIn("Harbourfront MRT Exit D", text)
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_exact_departure_time_still_shown(self, _, mock_now):
+    def test_exact_departure_time_still_shown(self, mock_now):
         """At exactly 07:20, the 07:20 bus should still be shown (0 min)."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 20)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("07:20" in c for c in calls))
-        self.assertTrue(any("0 min" in c for c in calls))
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("07:20", text)
+        self.assertIn("0 min", text)
 
     @patch('bus_bot.get_singapore_now')
-    @patch('bus_bot.get_day_type', return_value="weekday")
-    def test_exact_last_bus_time(self, _, mock_now):
+    def test_exact_last_bus_time(self, mock_now):
         """At exactly 20:00, the last bus should still be shown, not 'all passed'."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(20, 0)))
-        self.mock_update.message.text = "ASR"
-        next_bus_time(self.mock_update, self.mock_context)
-        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("20:00" in c for c in calls))
-        self.assertFalse(any("no more bus" in c.lower() for c in calls))
+        text = build_next_bus_text("asr", "weekday")
+        self.assertIn("20:00", text)
+        self.assertNotIn("no more bus", text.lower())
 
 
 if __name__ == '__main__':

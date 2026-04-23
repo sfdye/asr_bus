@@ -2,11 +2,10 @@ import datetime
 import os
 
 import pytz
-import telegram
 from dotenv import load_dotenv
-from telegram import ParseMode, Update
-from telegram.ext import (CallbackContext, CommandHandler, Filters,
-                          MessageHandler, Updater)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
+from telegram.ext import (CallbackContext, CallbackQueryHandler,
+                          CommandHandler, Updater)
 
 load_dotenv(override=True)
 
@@ -19,6 +18,8 @@ STOP_NAMES = {
     "outram_exit_7": "Outram Park MRT Exit 7",
     "harbourfront": "Harbourfront MRT Exit D",
 }
+
+STOP_EMOJIS = {"asr": "🏠", "outram_exit_6": "🚇", "outram_exit_7": "🚇", "harbourfront": "🛍️"}
 
 STOP_OFFSETS = {"asr": 0, "outram_exit_6": 6, "outram_exit_7": 8, "harbourfront": 10}
 
@@ -60,27 +61,6 @@ saturday_breaks = {
 WEEKDAY_LAST_DROPOFF = "20:15"
 SATURDAY_LAST_DROPOFF = "20:45"
 
-LOCATION_BUTTONS = [
-    "ASR", "Outram Park MRT Exit 6", "Outram Park MRT Exit 7", "Harbourfront MRT Exit D",
-]
-SCHEDULE_BUTTONS = [
-    "ASR Schedule", "Outram Park MRT Exit 6 Schedule",
-    "Outram Park MRT Exit 7 Schedule", "Harbourfront MRT Exit D Schedule",
-]
-
-LOCATION_BUTTON_MAP = {
-    "asr": "asr",
-    "outram park mrt exit 6": "outram_exit_6",
-    "outram park mrt exit 7": "outram_exit_7",
-    "harbourfront mrt exit d": "harbourfront",
-}
-
-SCHEDULE_BUTTON_MAP = {
-    "asr schedule": "asr",
-    "outram park mrt exit 6 schedule": "outram_exit_6",
-    "outram park mrt exit 7 schedule": "outram_exit_7",
-    "harbourfront mrt exit d schedule": "harbourfront",
-}
 
 intro_text = """
 🚌 Eh hello neighbour! I help you check ASR bus timing one.
@@ -187,30 +167,26 @@ def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(disclaimer, parse_mode=ParseMode.HTML)
 
 
+def schedule_inline_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(f"{STOP_EMOJIS[k]} {STOP_NAMES[k]}", callback_data=f"schedule:{k}")]
+        for k in STOP_NAMES
+    ])
+
+
 def prompt_schedule(update: Update, context: CallbackContext) -> None:
     day_type = get_day_type()
     label = "Saturday" if day_type == "saturday" else "Weekday"
-
-    keyboard = [[telegram.KeyboardButton(b)] for b in SCHEDULE_BUTTONS]
-    reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
     if day_type == "sunday":
         msg = "😴 Sunday no bus lah.\n📋 Showing <b>Weekday</b> schedule.\nWhich stop you want?"
     else:
         msg = f"📋 <b>{label} Schedule</b>\nWhich stop you want to see?"
-    update.message.reply_text(msg, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+    update.message.reply_text(msg, reply_markup=schedule_inline_keyboard(),
+                              parse_mode=ParseMode.HTML)
 
 
-def get_schedule(update: Update, context: CallbackContext) -> None:
-    stop_key = SCHEDULE_BUTTON_MAP.get(update.message.text.lower())
-    if not stop_key:
-        update.message.reply_text("Paiseh, I don't understand leh. Try /schedule again?")
-        return
-
-    day_type = get_day_type()
-    if day_type == "sunday":
-        day_type = "weekday"
-
+def build_schedule_text(stop_key, day_type):
     trips = get_trips_for_day_type(day_type)
     breaks = weekday_breaks if day_type == "weekday" else saturday_breaks
     last_dropoff = WEEKDAY_LAST_DROPOFF if day_type == "weekday" else SATURDAY_LAST_DROPOFF
@@ -222,8 +198,31 @@ def get_schedule(update: Update, context: CallbackContext) -> None:
     else:
         body = format_stop_schedule(trips, stop_key, breaks)
 
-    update.message.reply_text(header + body, parse_mode=ParseMode.HTML)
-    update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
+    return header + body + "\n" + service_notice
+
+
+def handle_schedule_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+
+    stop_key = query.data.split(":")[1]
+    if stop_key not in STOP_NAMES:
+        return
+
+    day_type = get_day_type()
+    if day_type == "sunday":
+        day_type = "weekday"
+
+    text = build_schedule_text(stop_key, day_type)
+    query.edit_message_text(text, parse_mode=ParseMode.HTML,
+                            reply_markup=schedule_inline_keyboard())
+
+
+def location_inline_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(f"{STOP_EMOJIS[k]} {STOP_NAMES[k]}", callback_data=f"location:{k}")]
+        for k in STOP_NAMES
+    ])
 
 
 def prompt_location(update: Update, context: CallbackContext) -> None:
@@ -231,26 +230,13 @@ def prompt_location(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(no_sunday_service, parse_mode=ParseMode.HTML)
         return
 
-    keyboard = [[telegram.KeyboardButton(b)] for b in LOCATION_BUTTONS]
-    reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    update.message.reply_text("📍 Where you at now ah?", reply_markup=reply_markup)
+    update.message.reply_text("📍 Where you at now ah?",
+                              reply_markup=location_inline_keyboard(),
+                              parse_mode=ParseMode.HTML)
 
 
-def next_bus_time(update: Update, context: CallbackContext) -> None:
-    day_type = get_day_type()
-    if day_type == "sunday":
-        update.message.reply_text(no_sunday_service, parse_mode=ParseMode.HTML)
-        return
-
+def build_next_bus_text(stop_key, day_type):
     current_time = get_singapore_now().time()
-    stop_key = LOCATION_BUTTON_MAP.get(update.message.text.lower())
-
-    if not stop_key:
-        update.message.reply_text(
-            "Paiseh, I don't understand leh 😅 Try /location again?"
-        )
-        return
-
     trips = get_trips_for_day_type(day_type)
     schedule = get_stop_schedule(trips, stop_key)
 
@@ -258,25 +244,41 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
         bus_time = datetime.datetime.strptime(time_str, "%H:%M").time()
         if current_time <= bus_time:
             mins = minutes_until(current_time, bus_time)
-            msg = format_bus_msg("Next bus departs" if stop_key == "asr" else "Next bus arrives",
-                                 mins, time_str, stop_key, trip_type)
-            update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+            lines = [format_bus_msg(
+                "Next bus departs" if stop_key == "asr" else "Next bus arrives",
+                mins, time_str, stop_key, trip_type)]
 
             if i < len(schedule) - 1:
                 next_time, next_type = schedule[i + 1]
                 next_bus = datetime.datetime.strptime(next_time, "%H:%M").time()
                 next_mins = minutes_until(current_time, next_bus)
-                following = format_bus_msg("Following bus", next_mins, next_time,
-                                           stop_key, next_type)
-                update.message.reply_text(following, parse_mode=ParseMode.HTML)
+                lines.append(format_bus_msg("Following bus", next_mins, next_time,
+                                            stop_key, next_type))
             else:
-                update.message.reply_text("☝️ Last bus already, no more after this one!")
+                lines.append("☝️ Last bus already, no more after this one!")
 
-            update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
-            return
+            lines.append(service_notice)
+            return "\n".join(lines)
 
-    update.message.reply_text("😢 Aiyoh, no more bus today already!")
-    update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
+    return "😢 Aiyoh, no more bus today already!" + "\n" + service_notice
+
+
+def handle_location_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+
+    stop_key = query.data.split(":")[1]
+    if stop_key not in STOP_NAMES:
+        return
+
+    day_type = get_day_type()
+    if day_type == "sunday":
+        query.edit_message_text(no_sunday_service, parse_mode=ParseMode.HTML)
+        return
+
+    text = build_next_bus_text(stop_key, day_type)
+    query.edit_message_text(text, parse_mode=ParseMode.HTML,
+                            reply_markup=location_inline_keyboard())
 
 
 def main() -> None:
@@ -285,11 +287,9 @@ def main() -> None:
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("schedule", prompt_schedule))
+    dp.add_handler(CallbackQueryHandler(handle_schedule_callback, pattern=r"^schedule:"))
     dp.add_handler(CommandHandler("location", prompt_location))
-    dp.add_handler(
-        MessageHandler(Filters.text(SCHEDULE_BUTTONS), get_schedule)
-    )
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, next_bus_time))
+    dp.add_handler(CallbackQueryHandler(handle_location_callback, pattern=r"^location:"))
 
     updater.start_polling()
     updater.idle()
