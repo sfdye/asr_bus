@@ -257,7 +257,7 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
 
     for i, (time_str, trip_type) in enumerate(schedule):
         bus_time = datetime.datetime.strptime(time_str, "%H:%M").time()
-        if current_time < bus_time:
+        if current_time <= bus_time:
             mins = minutes_until(current_time, bus_time)
             msg = format_bus_msg("Next bus departs" if stop_key == "asr" else "Next bus arrives",
                                  mins, time_str, stop_key, trip_type)

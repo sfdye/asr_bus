@@ -452,6 +452,28 @@ class TestNextBusEdgeCases(unittest.TestCase):
         self.assertIn("Outram Park MRT", calls[0])
         self.assertIn("Harbourfront MRT Exit D", calls[1])
 
+    @patch('bus_bot.get_singapore_now')
+    @patch('bus_bot.get_day_type', return_value="weekday")
+    def test_exact_departure_time_still_shown(self, _, mock_now):
+        """At exactly 07:20, the 07:20 bus should still be shown (0 minutes)."""
+        mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 20)))
+        self.mock_update.message.text = "ASR"
+        next_bus_time(self.mock_update, self.mock_context)
+        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
+        self.assertTrue(any("07:20" in c for c in calls))
+        self.assertTrue(any("0 minutes" in c for c in calls))
+
+    @patch('bus_bot.get_singapore_now')
+    @patch('bus_bot.get_day_type', return_value="weekday")
+    def test_exact_last_bus_time(self, _, mock_now):
+        """At exactly 20:00, the last bus should still be shown, not 'all passed'."""
+        mock_now.return_value = Mock(time=Mock(return_value=datetime.time(20, 0)))
+        self.mock_update.message.text = "ASR"
+        next_bus_time(self.mock_update, self.mock_context)
+        calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
+        self.assertTrue(any("20:00" in c for c in calls))
+        self.assertFalse(any("passed" in c.lower() for c in calls))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
