@@ -481,5 +481,21 @@ class TestNextBusEdgeCases(unittest.TestCase):
         self.assertNotIn("no more bus", text.lower())
 
 
+class TestBotCommands(unittest.TestCase):
+
+    @patch('bus_bot.Updater')
+    def test_set_my_commands_called(self, mock_updater_class):
+        from bus_bot import main
+        mock_updater = mock_updater_class.return_value
+        mock_bot = mock_updater.bot
+
+        main()
+
+        mock_bot.set_my_commands.assert_called_once()
+        commands = mock_bot.set_my_commands.call_args[0][0]
+        command_names = [c.command for c in commands]
+        self.assertEqual(command_names, ["start", "location", "schedule"])
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

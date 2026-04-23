@@ -291,6 +291,12 @@ def main() -> None:
     dp.add_handler(CommandHandler("location", prompt_location))
     dp.add_handler(CallbackQueryHandler(handle_location_callback, pattern=r"^location:"))
 
+    updater.bot.set_my_commands([
+        telegram.BotCommand("start", "🚌 Hello! What can this bot do ah?"),
+        telegram.BotCommand("location", "📍 Next bus from my stop"),
+        telegram.BotCommand("schedule", "📋 Full timetable for today"),
+    ])
+
     updater.start_polling()
     updater.idle()
 
