@@ -170,7 +170,7 @@ class TestNextBusTime(unittest.TestCase):
         self.mock_update.message.text = "ASR"
         next_bus_time(self.mock_update, self.mock_context)
         call_args = self.mock_update.message.reply_text.call_args[0][0]
-        self.assertIn("no bus service on sundays", call_args.lower())
+        self.assertIn("sunday no bus lah", call_args.lower())
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
@@ -179,8 +179,8 @@ class TestNextBusTime(unittest.TestCase):
         self.mock_update.message.text = "ASR"
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("minutes" in c for c in calls))
-        self.assertTrue(any("Heading to" in c for c in calls))
+        self.assertTrue(any("min" in c for c in calls))
+        self.assertTrue(any("Going to" in c for c in calls))
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
@@ -189,7 +189,7 @@ class TestNextBusTime(unittest.TestCase):
         self.mock_update.message.text = "ASR"
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("passed" in c.lower() for c in calls))
+        self.assertTrue(any("no more bus" in c.lower() for c in calls))
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
@@ -198,14 +198,14 @@ class TestNextBusTime(unittest.TestCase):
         self.mock_update.message.text = "Harbourfront MRT Exit D"
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("minutes" in c for c in calls))
+        self.assertTrue(any("min" in c for c in calls))
 
     @patch('bus_bot.get_day_type', return_value="weekday")
     def test_invalid_location(self, _):
         self.mock_update.message.text = "somewhere else"
         next_bus_time(self.mock_update, self.mock_context)
         call_args = self.mock_update.message.reply_text.call_args[0][0]
-        self.assertIn("Sorry", call_args)
+        self.assertIn("Paiseh", call_args)
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
@@ -214,7 +214,7 @@ class TestNextBusTime(unittest.TestCase):
         self.mock_update.message.text = "outram park mrt exit 6"
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("minutes" in c for c in calls))
+        self.assertTrue(any("min" in c for c in calls))
 
 
 class TestGetSchedule(unittest.TestCase):
@@ -261,7 +261,7 @@ class TestPromptLocation(unittest.TestCase):
     def test_sunday_no_service(self, _):
         prompt_location(self.mock_update, self.mock_context)
         call_args = self.mock_update.message.reply_text.call_args[0][0]
-        self.assertIn("no bus service on sundays", call_args.lower())
+        self.assertIn("sunday no bus lah", call_args.lower())
 
 
 class TestFormatting(unittest.TestCase):
@@ -383,7 +383,7 @@ class TestNextBusEdgeCases(unittest.TestCase):
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
         first_reply = calls[0]
-        self.assertIn("30 minutes", first_reply)
+        self.assertIn("30 min", first_reply)
         self.assertIn("13:00", first_reply)
 
     @patch('bus_bot.get_singapore_now')
@@ -394,8 +394,8 @@ class TestNextBusEdgeCases(unittest.TestCase):
         self.mock_update.message.text = "ASR"
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("5 minutes" in c for c in calls))
-        self.assertTrue(any("no following bus" in c.lower() for c in calls))
+        self.assertTrue(any("5 min" in c for c in calls))
+        self.assertTrue(any("last bus already" in c.lower() for c in calls))
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
@@ -417,7 +417,7 @@ class TestNextBusEdgeCases(unittest.TestCase):
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
         first_reply = calls[0]
-        self.assertIn("15 minutes", first_reply)
+        self.assertIn("15 min", first_reply)
         self.assertIn("Harbourfront", first_reply)
 
     @patch('bus_bot.get_singapore_now')
@@ -428,7 +428,7 @@ class TestNextBusEdgeCases(unittest.TestCase):
         self.mock_update.message.text = "Outram Park MRT Exit 6"
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
-        self.assertTrue(any("passed" in c.lower() for c in calls))
+        self.assertTrue(any("no more bus" in c.lower() for c in calls))
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
@@ -455,13 +455,13 @@ class TestNextBusEdgeCases(unittest.TestCase):
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
     def test_exact_departure_time_still_shown(self, _, mock_now):
-        """At exactly 07:20, the 07:20 bus should still be shown (0 minutes)."""
+        """At exactly 07:20, the 07:20 bus should still be shown (0 min)."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 20)))
         self.mock_update.message.text = "ASR"
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
         self.assertTrue(any("07:20" in c for c in calls))
-        self.assertTrue(any("0 minutes" in c for c in calls))
+        self.assertTrue(any("0 min" in c for c in calls))
 
     @patch('bus_bot.get_singapore_now')
     @patch('bus_bot.get_day_type', return_value="weekday")
@@ -472,7 +472,7 @@ class TestNextBusEdgeCases(unittest.TestCase):
         next_bus_time(self.mock_update, self.mock_context)
         calls = [c[0][0] for c in self.mock_update.message.reply_text.call_args_list]
         self.assertTrue(any("20:00" in c for c in calls))
-        self.assertFalse(any("passed" in c.lower() for c in calls))
+        self.assertFalse(any("no more bus" in c.lower() for c in calls))
 
 
 if __name__ == '__main__':

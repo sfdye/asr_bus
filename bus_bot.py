@@ -83,22 +83,21 @@ SCHEDULE_BUTTON_MAP = {
 }
 
 intro_text = """
-Hi neighbour, I'm a bot programmed to tell you the estimated time our ASR buses will arrive.
+🚌 Eh hello neighbour! I help you check ASR bus timing one.
 
-<b>Route:</b> ASR → Outram Park MRT / Harbourfront MRT Exit D
-<b>Service days:</b> Monday to Saturday (no Sunday service)
+<b>🗺️ Route:</b> ASR → Outram Park MRT / Harbourfront MRT Exit D
+<b>📅 Service days:</b> Mon to Sat (Sunday no bus lah)
 
-Commands you may try:
-/location - Next bus timing
-/schedule - Full schedule
+Try these:
+/location - Next bus when ah? 🕐
+/schedule - See full timetable 📋
 """
 
 service_notice = """
-Bus timings are estimated and subject to traffic conditions.
-Please be at the stop 5 minutes early.
+⏰ Timing is estimate only ah, come 5 min early just in case!
 """
 
-no_sunday_service = "There is no bus service on Sundays.\nService runs Monday to Saturday."
+no_sunday_service = "😴 Sunday no bus lah. Service Mon to Sat only!"
 
 
 def get_singapore_now():
@@ -146,9 +145,9 @@ def minutes_until(current_time, target_time):
 
 def format_bus_msg(label, minutes, time_str, stop_key, trip_type):
     if stop_key == "asr":
-        return (f"{label} in <b>{minutes} minutes</b> ({time_str})\n"
-                f"→ Heading to <b>{TRIP_DESTINATIONS[trip_type]}</b>")
-    return f"{label} in <b>{minutes} minutes</b> ({time_str})"
+        return (f"🚌 {label} in <b>{minutes} min</b> ({time_str})\n"
+                f"➡️ Going to <b>{TRIP_DESTINATIONS[trip_type]}</b>")
+    return f"🚌 {label} in <b>{minutes} min</b> ({time_str})"
 
 
 def format_asr_schedule(trips, breaks, last_dropoff):
@@ -178,12 +177,12 @@ def format_stop_schedule(trips, stop_key, breaks):
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(intro_text, parse_mode=ParseMode.HTML)
     disclaimer = (
-        "Please note:\n"
-        "* Bus timings are estimated and subject to traffic conditions.\n"
-        "* Please be at least 5 to 8 minutes early at the designated pickup points.\n"
-        "* For safety, standing, heavy, lengthy & bulky items in the bus are not allowed.\n"
-        "* The bus will only stop at the designated stops.\n"
-        "* No waiting, parking/holding of buses are allowed."
+        "⚠️ Take note ah:\n"
+        "• Bus timing is estimate only, traffic can affect one.\n"
+        "• Come 5 to 8 min early to be safe lah.\n"
+        "• Cannot bring heavy/bulky items on the bus hor.\n"
+        "• Bus only stop at designated stops.\n"
+        "• No waiting or holding the bus at stops!"
     )
     update.message.reply_text(disclaimer, parse_mode=ParseMode.HTML)
 
@@ -196,16 +195,16 @@ def prompt_schedule(update: Update, context: CallbackContext) -> None:
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
     if day_type == "sunday":
-        msg = "No bus service today (Sunday).\nShowing <b>Weekday</b> schedule.\nPick a stop:"
+        msg = "😴 Sunday no bus lah.\n📋 Showing <b>Weekday</b> schedule.\nWhich stop you want?"
     else:
-        msg = f"<b>{label} Schedule</b>\nPick a stop to see the timetable:"
+        msg = f"📋 <b>{label} Schedule</b>\nWhich stop you want to see?"
     update.message.reply_text(msg, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
 
 def get_schedule(update: Update, context: CallbackContext) -> None:
     stop_key = SCHEDULE_BUTTON_MAP.get(update.message.text.lower())
     if not stop_key:
-        update.message.reply_text("Sorry, I didn't understand. Please use /schedule to try again.")
+        update.message.reply_text("Paiseh, I don't understand leh. Try /schedule again?")
         return
 
     day_type = get_day_type()
@@ -234,7 +233,7 @@ def prompt_location(update: Update, context: CallbackContext) -> None:
 
     keyboard = [[telegram.KeyboardButton(b)] for b in LOCATION_BUTTONS]
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    update.message.reply_text("Where are you now ah?", reply_markup=reply_markup)
+    update.message.reply_text("📍 Where you at now ah?", reply_markup=reply_markup)
 
 
 def next_bus_time(update: Update, context: CallbackContext) -> None:
@@ -248,7 +247,7 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
 
     if not stop_key:
         update.message.reply_text(
-            "Sorry, I didn't understand your location. Please use /location to try again."
+            "Paiseh, I don't understand leh 😅 Try /location again?"
         )
         return
 
@@ -271,12 +270,12 @@ def next_bus_time(update: Update, context: CallbackContext) -> None:
                                            stop_key, next_type)
                 update.message.reply_text(following, parse_mode=ParseMode.HTML)
             else:
-                update.message.reply_text("There is no following bus for today.")
+                update.message.reply_text("☝️ Last bus already, no more after this one!")
 
             update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
             return
 
-    update.message.reply_text("All buses for today have already passed.")
+    update.message.reply_text("😢 Aiyoh, no more bus today already!")
     update.message.reply_text(service_notice, parse_mode=ParseMode.HTML)
 
 
