@@ -1,0 +1,11 @@
+[project]
+name = "asr-bus"
+version = "0.1.0"
+description = "Telegram bot for ASR shuttle bus timings"
+requires-python = ">=3.11"
+dependencies = [
+    "python-telegram-bot==13.0.0",
+    "urllib3==1.26.15",
+    "python-dotenv==1.0.1",
+    "setuptools<81",
+]
