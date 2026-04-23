@@ -34,7 +34,8 @@ A Telegram bot that provides real-time shuttle bus schedules and arrival times f
 
 ## 🛠 Prerequisites
 
-- Python 3.7 or higher
+- Python 3.11 or higher
+- [uv](https://docs.astral.sh/uv/) package manager
 - Telegram account
 
 ## 📦 Installation
@@ -49,7 +50,7 @@ cd asr_bus
 ### 2. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 3. Configure Environment
@@ -63,7 +64,7 @@ TOKEN=your_bot_token_here
 ### 4. Run the Bot
 
 ```bash
-python bus_bot.py
+uv run python bus_bot.py
 ```
 
 ## 🎮 Bot Commands
@@ -81,7 +82,7 @@ python bus_bot.py
 Run the test suite (55 tests):
 
 ```bash
-python -m unittest test_bus_bot.py -v
+uv run python -m unittest test_bus_bot.py -v
 ```
 
 ### Manual Testing Checklist
@@ -116,9 +117,8 @@ Click: "Outram Park MRT Exit 6" → Next bus + following bus
 ### Local Development
 
 ```bash
-source .venv/bin/activate
 export TOKEN=<dev-token>
-(venv) python bus_bot.py
+uv run python bus_bot.py
 ```
 
 ### Production Deployment
@@ -134,7 +134,7 @@ cat /etc/supervisor/conf.d/asr_bus.conf
 [program:asr_bus]
 user=pi
 directory=/home/pi/Code/asr_bus
-command=/home/pi/Code/asr_bus/.virtualenv/bin/python bus_bot.py
+command=/home/pi/Code/asr_bus/.venv/bin/python bus_bot.py
 
 autostart=true
 autorestart=true
