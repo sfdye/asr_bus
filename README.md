@@ -1,23 +1,36 @@
 # ASR Bus Telegram Bot 🚌
 
-A Telegram bot that provides real-time shuttle bus schedules and arrival times for residents of Avenue South Residence (ASR) traveling to/from Outram Park MRT station in Singapore.
+A Telegram bot that provides real-time shuttle bus schedules and arrival times for residents of Avenue South Residence (ASR) in Singapore.
 
 ## ✨ Features
 
 - **Real-time bus arrivals** - Get next bus timing based on current time
-- **Complete schedules** - View full timetables for both directions
+- **4 stops** - ASR, Outram Park MRT Exit 6 & 7, Harbourfront MRT Exit D
+- **Weekday & Saturday schedules** - Auto-detected based on current day
+- **Singlish personality** - Local flavour with fun emojis
 - **User-friendly interface** - Custom keyboards for easy interaction
-- **Accurate data** - Synchronized with official shuttle bus schedules
 
 ## 🚍 Schedule Overview
 
-- **Service Hours**: 8:00 AM - 7:40 PM daily (Monday to Sunday)
-- **Frequency**: 22 trips per day in each direction
-- **Travel Time**: ~4 minutes from ASR to Outram Park MRT
+- **Service Days**: Monday to Saturday (no Sunday service)
+- **Route A**: ASR → Outram Park MRT Exit 6 → Outram Park MRT Exit 7
+- **Route B**: ASR → Harbourfront MRT Exit D
+- **Travel Time**: +6 min (Exit 6), +8 min (Exit 7), +10 min (Harbourfront)
+
+### Weekday (Mon-Fri)
+- **Service Hours**: 7:20 AM - 8:00 PM (23 trips)
 - **Break Periods**:
-  - 10:15-10:35 (Break)
-  - 13:20-14:20 (Lunch Break)  
-  - 17:05-17:40 (Pump petrol & break)
+  - After 09:00 (Driver Break)
+  - 12:00-13:00 (Lunch Break)
+  - After 15:00 (Driver Break & Petrol)
+- **Last drop-off**: 20:15
+
+### Saturday
+- **Service Hours**: 9:00 AM - 8:30 PM (20 trips)
+- **Break Periods**:
+  - 13:00-14:00 (Lunch Break)
+  - After 16:30 (Driver Break & Petrol)
+- **Last drop-off**: 20:45
 
 ## 🛠 Prerequisites
 
@@ -53,21 +66,19 @@ TOKEN=your_bot_token_here
 python bus_bot.py
 ```
 
-You should see output indicating the bot is running and polling for updates.
-
 ## 🎮 Bot Commands
 
 | Command | Description |
 |---------|-------------|
 | `/start` | Welcome message with bot introduction and disclaimer |
-| `/location` | Get next bus arrival time from your current location |
-| `/schedule` | View complete bus schedules for both directions |
+| `/location` | Get next bus arrival time from your current stop |
+| `/schedule` | View full timetable for a specific stop |
 
 ## 🧪 Testing
 
 ### Automated Testing
 
-Run the comprehensive test suite:
+Run the test suite (55 tests):
 
 ```bash
 python -m unittest test_bus_bot.py -v
@@ -79,25 +90,26 @@ python -m unittest test_bus_bot.py -v
 
 ```
 Send: /start
-Expected: Welcome message + disclaimer + commands list
+Expected: Welcome message + disclaimer
 ```
 
 #### 2. Schedule Display
 
 ```
 Send: /schedule
-Click: "ASR Schedule" → See 22 departure times (08:00 to 19:40)
-Click: "Outram MRT Schedule" → See 22 arrival times (08:04 to 19:44)
+Expected: Day-type detected, 4 stop buttons shown
+Click: "ASR Schedule" → Timetable with destinations per trip
+Click: "Harbourfront MRT Exit D Schedule" → Arrival times only
 ```
 
 #### 3. Location-Based Timing
 
 ```
 Send: /location
-Click: "ASR" → Next bus timing + service notice
-Click: "Outram MRT" → Next bus timing + service notice
+Expected: 4 stop buttons shown (Sunday: no-service message)
+Click: "ASR" → Next bus + destination + following bus
+Click: "Outram Park MRT Exit 6" → Next bus + following bus
 ```
-
 
 ## 🚀 Deployment
 
