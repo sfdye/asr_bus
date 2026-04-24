@@ -9,3 +9,8 @@ dependencies = [
     "holidays==0.95",
     "setuptools<81",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]

@@ -16,4 +16,4 @@ jobs:
 
       - run: uv sync
 
-      - run: uv run python -m unittest test_bus_bot -v
+      - run: uv run pytest -v
