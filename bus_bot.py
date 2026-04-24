@@ -1,6 +1,7 @@
 import datetime
 import os
 
+import holidays
 import pytz
 from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
@@ -11,6 +12,7 @@ load_dotenv(override=True)
 
 TOKEN = os.getenv("TOKEN")
 SG_TZ = pytz.timezone("Asia/Singapore")
+SG_HOLIDAYS = holidays.Singapore()
 
 STOP_NAMES = {
     "asr": "Avenue South Residence",
@@ -85,12 +87,13 @@ def get_singapore_now():
 
 
 def get_day_type():
-    weekday = get_singapore_now().weekday()
-    if weekday < 5:
-        return "weekday"
-    if weekday == 5:
+    now = get_singapore_now()
+    weekday = now.weekday()
+    if weekday == 6:
+        return "sunday"
+    if weekday == 5 or now.date() in SG_HOLIDAYS:
         return "saturday"
-    return "sunday"
+    return "weekday"
 
 
 def get_trips_for_day_type(day_type):
