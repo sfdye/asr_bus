@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "install": {
+      "commands": ["uv sync"]
+    }
+  },
+  "deploy": {
+    "startCommand": "uv run python bus_bot.py"
+  }
+}
