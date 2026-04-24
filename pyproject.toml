@@ -7,7 +7,7 @@ dependencies = [
     "python-telegram-bot==13.0.0",
     "python-dotenv==1.2.2",
     "holidays==0.95",
-    "setuptools<81",
+    "setuptools<83",
 ]
 
 [dependency-groups]
