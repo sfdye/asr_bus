@@ -9,3 +9,6 @@ dependencies = [
     "holidays==0.95",
     "setuptools<81",
 ]
+
+[tool.railpack]
+start = "python bus_bot.py"
