@@ -21,13 +21,14 @@ from bus_bot import (
     format_stop_schedule,
     STOP_NAMES,
     STOP_OFFSETS,
+    SG_HOLIDAYS,
 )
 
 
 class TestTripData(unittest.TestCase):
 
     def test_weekday_trip_count(self):
-        self.assertEqual(len(weekday_trips), 23)
+        self.assertEqual(len(weekday_trips), 24)
 
     def test_saturday_trip_count(self):
         self.assertEqual(len(saturday_trips), 20)
@@ -50,7 +51,7 @@ class TestTripData(unittest.TestCase):
     def test_weekday_trip_type_counts(self):
         a_count = sum(1 for _, t in weekday_trips if t == "A")
         b_count = sum(1 for _, t in weekday_trips if t == "B")
-        self.assertEqual(a_count, 14)
+        self.assertEqual(a_count, 15)
         self.assertEqual(b_count, 9)
 
     def test_saturday_trip_type_counts(self):
@@ -77,7 +78,7 @@ class TestHelpers(unittest.TestCase):
 
     def test_get_stop_schedule_asr(self):
         schedule = get_stop_schedule(weekday_trips, "asr")
-        self.assertEqual(len(schedule), 23)
+        self.assertEqual(len(schedule), 24)
         self.assertEqual(schedule[0], ("07:20", "A"))
 
     def test_get_stop_schedule_outram_exit_6(self):
@@ -134,17 +135,17 @@ class TestDayType(unittest.TestCase):
     @patch('bus_bot.get_singapore_now')
     def test_weekday_detection(self, mock_now):
         for day in range(5):  # Mon-Fri
-            mock_now.return_value = Mock(weekday=Mock(return_value=day))
+            mock_now.return_value = datetime.datetime(2026, 1, 5 + day, 10, 0, tzinfo=datetime.timezone.utc)
             self.assertEqual(get_day_type(), "weekday")
 
     @patch('bus_bot.get_singapore_now')
     def test_saturday_detection(self, mock_now):
-        mock_now.return_value = Mock(weekday=Mock(return_value=5))
+        mock_now.return_value = datetime.datetime(2026, 1, 10, 10, 0, tzinfo=datetime.timezone.utc)
         self.assertEqual(get_day_type(), "saturday")
 
     @patch('bus_bot.get_singapore_now')
     def test_sunday_detection(self, mock_now):
-        mock_now.return_value = Mock(weekday=Mock(return_value=6))
+        mock_now.return_value = datetime.datetime(2026, 1, 11, 10, 0, tzinfo=datetime.timezone.utc)
         self.assertEqual(get_day_type(), "sunday")
 
     def test_get_trips_weekday(self):
@@ -155,6 +156,38 @@ class TestDayType(unittest.TestCase):
 
     def test_get_trips_sunday(self):
         self.assertIsNone(get_trips_for_day_type("sunday"))
+
+
+class TestPublicHoliday(unittest.TestCase):
+
+    @patch('bus_bot.get_singapore_now')
+    def test_weekday_public_holiday_returns_saturday(self, mock_now):
+        """2026-01-01 (New Year's Day) is a Thursday — should return saturday."""
+        mock_now.return_value = datetime.datetime(2026, 1, 1, 10, 0, tzinfo=datetime.timezone.utc)
+        self.assertEqual(get_day_type(), "saturday")
+
+    @patch('bus_bot.get_singapore_now')
+    def test_sunday_public_holiday_returns_sunday(self, mock_now):
+        """2026-08-09 (National Day) is a Sunday — should still return sunday."""
+        mock_now.return_value = datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc)
+        self.assertEqual(get_day_type(), "sunday")
+
+    @patch('bus_bot.get_singapore_now')
+    def test_saturday_public_holiday_returns_saturday(self, mock_now):
+        """2026-05-01 (Labour Day) is a Friday — but let's use a Saturday holiday.
+        2027-01-01 (New Year's Day) is a Friday. Use 2028-01-01 which is a Saturday."""
+        mock_now.return_value = datetime.datetime(2028, 1, 1, 10, 0, tzinfo=datetime.timezone.utc)
+        self.assertEqual(get_day_type(), "saturday")
+
+    @patch('bus_bot.get_singapore_now')
+    def test_normal_weekday_not_holiday(self, mock_now):
+        """2026-01-05 (Monday, not a holiday) — should return weekday."""
+        mock_now.return_value = datetime.datetime(2026, 1, 5, 10, 0, tzinfo=datetime.timezone.utc)
+        self.assertEqual(get_day_type(), "weekday")
+
+    def test_sg_holidays_contains_known_dates(self):
+        self.assertIn(datetime.date(2026, 1, 1), SG_HOLIDAYS)
+        self.assertIn(datetime.date(2026, 8, 9), SG_HOLIDAYS)
 
 
 class TestBuildNextBusText(unittest.TestCase):
@@ -345,7 +378,7 @@ class TestScheduleAccuracy(unittest.TestCase):
     def test_weekday_outram_exit_6_times(self):
         times = self.times(get_stop_schedule(weekday_trips, "outram_exit_6"))
         expected = [
-            "07:26", "07:46", "08:06", "08:26", "09:06",
+            "07:26", "07:46", "08:06", "08:26", "08:46", "09:06",
             "09:36", "10:36", "11:36",
             "13:36", "14:36",
             "16:36", "17:36", "18:36", "19:36",
@@ -355,7 +388,7 @@ class TestScheduleAccuracy(unittest.TestCase):
     def test_weekday_outram_exit_7_times(self):
         times = self.times(get_stop_schedule(weekday_trips, "outram_exit_7"))
         expected = [
-            "07:28", "07:48", "08:08", "08:28", "09:08",
+            "07:28", "07:48", "08:08", "08:28", "08:48", "09:08",
             "09:38", "10:38", "11:38",
             "13:38", "14:38",
             "16:38", "17:38", "18:38", "19:38",
