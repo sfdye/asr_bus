@@ -2,13 +2,11 @@
   "$schema": "https://schema.railpack.com",
   "steps": {
     "install": {
-      "inputs": [
-        {
-          "local": true,
-          "include": ["."]
-        }
-      ],
-      "commands": ["uv sync"]
+      "commands": [
+        { "src": "pyproject.toml", "dest": "pyproject.toml" },
+        { "src": "uv.lock", "dest": "uv.lock" },
+        "uv sync"
+      ]
     }
   },
   "deploy": {
