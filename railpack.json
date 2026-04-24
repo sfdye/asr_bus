@@ -10,7 +10,7 @@
     }
   },
   "packages": {
-    "python": "3.12"
+    "python": "3.11"
   },
   "deploy": {
     "startCommand": "uv run python bus_bot.py"
