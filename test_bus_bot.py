@@ -26,8 +26,6 @@ from bus_bot import (
 )
 
 
-# --- Trip data ---
-
 
 class TestTripData:
 
@@ -72,8 +70,6 @@ class TestTripData:
         assert saturday_trips[0] == ("09:00", "A")
         assert saturday_trips[-1] == ("20:30", "B")
 
-
-# --- Helpers ---
 
 
 class TestHelpers:
@@ -137,8 +133,6 @@ class TestHelpers:
                 prev = t
 
 
-# --- Day type ---
-
 
 class TestDayType:
 
@@ -167,8 +161,6 @@ class TestDayType:
     def test_get_trips_sunday(self):
         assert get_trips_for_day_type("sunday") is None
 
-
-# --- Public holidays ---
 
 
 class TestPublicHoliday:
@@ -202,8 +194,6 @@ class TestPublicHoliday:
         assert datetime.date(2026, 8, 9) in SG_HOLIDAYS
 
 
-# --- Next bus text ---
-
 
 class TestBuildNextBusText:
 
@@ -226,8 +216,6 @@ class TestBuildNextBusText:
         text = build_next_bus_text("harbourfront", "weekday")
         assert "min" in text
 
-
-# --- Location inline keyboard ---
 
 
 class TestLocationInlineKeyboard:
@@ -290,8 +278,6 @@ class TestLocationInlineKeyboard:
         assert "reply_markup" in call_kwargs
 
 
-# --- Schedule text ---
-
 
 class TestBuildScheduleText:
 
@@ -312,8 +298,6 @@ class TestBuildScheduleText:
         assert "Saturday" in text
         assert "09:00" in text
 
-
-# --- Schedule inline keyboard ---
 
 
 class TestScheduleInlineKeyboard:
@@ -373,8 +357,6 @@ class TestScheduleInlineKeyboard:
         assert "reply_markup" in call_kwargs
 
 
-# --- Formatting ---
-
 
 class TestFormatting:
 
@@ -394,8 +376,6 @@ class TestFormatting:
         assert "07:26" in text
         assert "→" not in text
 
-
-# --- Schedule accuracy ---
 
 
 class TestScheduleAccuracy:
@@ -469,8 +449,6 @@ class TestScheduleAccuracy:
         ]
         assert times == expected
 
-
-# --- Next bus edge cases ---
 
 
 class TestNextBusEdgeCases:
