@@ -9,8 +9,8 @@
       ]
     }
   },
-  "variables": {
-    "PYTHON_VERSION": "3.12"
+  "packages": {
+    "python": "3.12"
   },
   "deploy": {
     "startCommand": "uv run python bus_bot.py"
