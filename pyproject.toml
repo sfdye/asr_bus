@@ -2,7 +2,7 @@
 name = "asr-bus"
 version = "1.0.0"
 description = "Telegram bot for Avenue South Residence shuttle bus schedules"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "python-telegram-bot==22.7",
     "python-dotenv==1.2.2",
