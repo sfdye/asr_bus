@@ -1,17 +1,18 @@
 import datetime
 import os
+from zoneinfo import ZoneInfo
 
 import holidays
-import pytz
 from dotenv import load_dotenv
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
-from telegram.ext import (CallbackContext, CallbackQueryHandler,
-                          CommandHandler, Updater)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.constants import ParseMode
+from telegram.ext import (Application, CallbackQueryHandler,
+                          CommandHandler, ContextTypes)
 
 load_dotenv(override=True)
 
 TOKEN = os.getenv("TOKEN")
-SG_TZ = pytz.timezone("Asia/Singapore")
+SG_TZ = ZoneInfo("Asia/Singapore")
 SG_HOLIDAYS = holidays.Singapore()
 
 STOP_NAMES = {
@@ -157,8 +158,8 @@ def format_stop_schedule(trips, stop_key, breaks):
     return "\n".join(lines)
 
 
-def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text(intro_text, parse_mode=ParseMode.HTML)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(intro_text, parse_mode=ParseMode.HTML)
     disclaimer = (
         "⚠️ Take note ah:\n"
         "• Bus timing is estimate only, traffic can affect one.\n"
@@ -167,7 +168,7 @@ def start(update: Update, context: CallbackContext) -> None:
         "• Bus only stop at designated stops.\n"
         "• No waiting or holding the bus at stops!"
     )
-    update.message.reply_text(disclaimer, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(disclaimer, parse_mode=ParseMode.HTML)
 
 
 def schedule_inline_keyboard():
@@ -177,7 +178,7 @@ def schedule_inline_keyboard():
     ])
 
 
-def prompt_schedule(update: Update, context: CallbackContext) -> None:
+async def prompt_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     day_type = get_day_type()
     label = "Saturday" if day_type == "saturday" else "Weekday"
 
@@ -185,8 +186,8 @@ def prompt_schedule(update: Update, context: CallbackContext) -> None:
         msg = "😴 Sunday no bus lah.\n📋 Showing <b>Weekday</b> schedule.\nWhich stop you want?"
     else:
         msg = f"📋 <b>{label} Schedule</b>\nWhich stop you want to see?"
-    update.message.reply_text(msg, reply_markup=schedule_inline_keyboard(),
-                              parse_mode=ParseMode.HTML)
+    await update.message.reply_text(msg, reply_markup=schedule_inline_keyboard(),
+                                    parse_mode=ParseMode.HTML)
 
 
 def build_schedule_text(stop_key, day_type):
@@ -204,9 +205,9 @@ def build_schedule_text(stop_key, day_type):
     return header + body + "\n" + service_notice
 
 
-def handle_schedule_callback(update: Update, context: CallbackContext) -> None:
+async def handle_schedule_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    query.answer()
+    await query.answer()
 
     stop_key = query.data.split(":")[1]
     if stop_key not in STOP_NAMES:
@@ -217,8 +218,8 @@ def handle_schedule_callback(update: Update, context: CallbackContext) -> None:
         day_type = "weekday"
 
     text = build_schedule_text(stop_key, day_type)
-    query.edit_message_text(text, parse_mode=ParseMode.HTML,
-                            reply_markup=schedule_inline_keyboard())
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML,
+                                  reply_markup=schedule_inline_keyboard())
 
 
 def location_inline_keyboard():
@@ -228,14 +229,14 @@ def location_inline_keyboard():
     ])
 
 
-def prompt_location(update: Update, context: CallbackContext) -> None:
+async def prompt_location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if get_day_type() == "sunday":
-        update.message.reply_text(no_sunday_service, parse_mode=ParseMode.HTML)
+        await update.message.reply_text(no_sunday_service, parse_mode=ParseMode.HTML)
         return
 
-    update.message.reply_text("📍 Where you at now ah?",
-                              reply_markup=location_inline_keyboard(),
-                              parse_mode=ParseMode.HTML)
+    await update.message.reply_text("📍 Where you at now ah?",
+                                    reply_markup=location_inline_keyboard(),
+                                    parse_mode=ParseMode.HTML)
 
 
 def build_next_bus_text(stop_key, day_type):
@@ -266,9 +267,9 @@ def build_next_bus_text(stop_key, day_type):
     return "😢 Aiyoh, no more bus today already!" + "\n" + service_notice
 
 
-def handle_location_callback(update: Update, context: CallbackContext) -> None:
+async def handle_location_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    query.answer()
+    await query.answer()
 
     stop_key = query.data.split(":")[1]
     if stop_key not in STOP_NAMES:
@@ -276,26 +277,24 @@ def handle_location_callback(update: Update, context: CallbackContext) -> None:
 
     day_type = get_day_type()
     if day_type == "sunday":
-        query.edit_message_text(no_sunday_service, parse_mode=ParseMode.HTML)
+        await query.edit_message_text(no_sunday_service, parse_mode=ParseMode.HTML)
         return
 
     text = build_next_bus_text(stop_key, day_type)
-    query.edit_message_text(text, parse_mode=ParseMode.HTML,
-                            reply_markup=location_inline_keyboard())
+    await query.edit_message_text(text, parse_mode=ParseMode.HTML,
+                                  reply_markup=location_inline_keyboard())
 
 
 def main() -> None:
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher
+    application = Application.builder().token(TOKEN).build()
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("schedule", prompt_schedule))
-    dp.add_handler(CallbackQueryHandler(handle_schedule_callback, pattern=r"^schedule:"))
-    dp.add_handler(CommandHandler("location", prompt_location))
-    dp.add_handler(CallbackQueryHandler(handle_location_callback, pattern=r"^location:"))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("schedule", prompt_schedule))
+    application.add_handler(CallbackQueryHandler(handle_schedule_callback, pattern=r"^schedule:"))
+    application.add_handler(CommandHandler("location", prompt_location))
+    application.add_handler(CallbackQueryHandler(handle_location_callback, pattern=r"^location:"))
 
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 
 if __name__ == "__main__":
