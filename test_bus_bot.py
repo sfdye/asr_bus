@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -225,9 +225,9 @@ class TestLocationInlineKeyboard:
         self.mock_context = Mock()
 
     @patch("bus_bot.get_day_type", return_value="weekday")
-    def test_prompt_location_sends_inline_keyboard(self, _):
-        self.mock_update.message.reply_text = Mock()
-        prompt_location(self.mock_update, self.mock_context)
+    async def test_prompt_location_sends_inline_keyboard(self, _):
+        self.mock_update.message.reply_text = AsyncMock()
+        await prompt_location(self.mock_update, self.mock_context)
         call_kwargs = self.mock_update.message.reply_text.call_args[1]
         reply_markup = call_kwargs.get("reply_markup")
         assert reply_markup is not None
@@ -238,42 +238,42 @@ class TestLocationInlineKeyboard:
             assert f"location:{stop_key}" in callback_data
 
     @patch("bus_bot.get_day_type", return_value="sunday")
-    def test_prompt_location_sunday_no_service(self, _):
-        self.mock_update.message.reply_text = Mock()
-        prompt_location(self.mock_update, self.mock_context)
+    async def test_prompt_location_sunday_no_service(self, _):
+        self.mock_update.message.reply_text = AsyncMock()
+        await prompt_location(self.mock_update, self.mock_context)
         msg = self.mock_update.message.reply_text.call_args[0][0]
         assert "sunday no bus lah" in msg.lower()
 
     @patch("bus_bot.get_singapore_now")
     @patch("bus_bot.get_day_type", return_value="weekday")
-    def test_handle_location_callback_edits_message(self, _, mock_now):
+    async def test_handle_location_callback_edits_message(self, _, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 25)))
-        query = Mock()
+        query = AsyncMock()
         query.data = "location:asr"
         self.mock_update.callback_query = query
-        handle_location_callback(self.mock_update, self.mock_context)
+        await handle_location_callback(self.mock_update, self.mock_context)
         query.answer.assert_called_once()
         query.edit_message_text.assert_called_once()
         text = query.edit_message_text.call_args[0][0]
         assert "min" in text
 
     @patch("bus_bot.get_day_type", return_value="sunday")
-    def test_handle_location_callback_sunday(self, _):
-        query = Mock()
+    async def test_handle_location_callback_sunday(self, _):
+        query = AsyncMock()
         query.data = "location:asr"
         self.mock_update.callback_query = query
-        handle_location_callback(self.mock_update, self.mock_context)
+        await handle_location_callback(self.mock_update, self.mock_context)
         text = query.edit_message_text.call_args[0][0]
         assert "sunday no bus lah" in text.lower()
 
     @patch("bus_bot.get_singapore_now")
     @patch("bus_bot.get_day_type", return_value="weekday")
-    def test_handle_location_callback_keeps_inline_keyboard(self, _, mock_now):
+    async def test_handle_location_callback_keeps_inline_keyboard(self, _, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 0)))
-        query = Mock()
+        query = AsyncMock()
         query.data = "location:outram_exit_6"
         self.mock_update.callback_query = query
-        handle_location_callback(self.mock_update, self.mock_context)
+        await handle_location_callback(self.mock_update, self.mock_context)
         call_kwargs = query.edit_message_text.call_args[1]
         assert "reply_markup" in call_kwargs
 
@@ -307,9 +307,9 @@ class TestScheduleInlineKeyboard:
         self.mock_context = Mock()
 
     @patch("bus_bot.get_day_type", return_value="weekday")
-    def test_prompt_schedule_sends_inline_keyboard(self, _):
-        self.mock_update.message.reply_text = Mock()
-        prompt_schedule(self.mock_update, self.mock_context)
+    async def test_prompt_schedule_sends_inline_keyboard(self, _):
+        self.mock_update.message.reply_text = AsyncMock()
+        await prompt_schedule(self.mock_update, self.mock_context)
         call_kwargs = self.mock_update.message.reply_text.call_args[1]
         reply_markup = call_kwargs.get("reply_markup")
         assert reply_markup is not None
@@ -320,18 +320,18 @@ class TestScheduleInlineKeyboard:
             assert f"schedule:{stop_key}" in callback_data
 
     @patch("bus_bot.get_day_type", return_value="sunday")
-    def test_prompt_schedule_sunday_message(self, _):
-        self.mock_update.message.reply_text = Mock()
-        prompt_schedule(self.mock_update, self.mock_context)
+    async def test_prompt_schedule_sunday_message(self, _):
+        self.mock_update.message.reply_text = AsyncMock()
+        await prompt_schedule(self.mock_update, self.mock_context)
         msg = self.mock_update.message.reply_text.call_args[0][0]
         assert "Sunday no bus lah" in msg
 
     @patch("bus_bot.get_day_type", return_value="weekday")
-    def test_handle_schedule_callback_edits_message(self, _):
-        query = Mock()
+    async def test_handle_schedule_callback_edits_message(self, _):
+        query = AsyncMock()
         query.data = "schedule:asr"
         self.mock_update.callback_query = query
-        handle_schedule_callback(self.mock_update, self.mock_context)
+        await handle_schedule_callback(self.mock_update, self.mock_context)
         query.answer.assert_called_once()
         query.edit_message_text.assert_called_once()
         text = query.edit_message_text.call_args[0][0]
@@ -339,20 +339,20 @@ class TestScheduleInlineKeyboard:
         assert "Weekday" in text
 
     @patch("bus_bot.get_day_type", return_value="sunday")
-    def test_handle_schedule_callback_sunday_shows_weekday(self, _):
-        query = Mock()
+    async def test_handle_schedule_callback_sunday_shows_weekday(self, _):
+        query = AsyncMock()
         query.data = "schedule:asr"
         self.mock_update.callback_query = query
-        handle_schedule_callback(self.mock_update, self.mock_context)
+        await handle_schedule_callback(self.mock_update, self.mock_context)
         text = query.edit_message_text.call_args[0][0]
         assert "Weekday" in text
 
     @patch("bus_bot.get_day_type", return_value="weekday")
-    def test_handle_schedule_callback_keeps_inline_keyboard(self, _):
-        query = Mock()
+    async def test_handle_schedule_callback_keeps_inline_keyboard(self, _):
+        query = AsyncMock()
         query.data = "schedule:harbourfront"
         self.mock_update.callback_query = query
-        handle_schedule_callback(self.mock_update, self.mock_context)
+        await handle_schedule_callback(self.mock_update, self.mock_context)
         call_kwargs = query.edit_message_text.call_args[1]
         assert "reply_markup" in call_kwargs
 
