@@ -34,7 +34,7 @@ A Telegram bot that provides real-time shuttle bus schedules and arrival times f
 
 ## 🛠 Prerequisites
 
-- Python 3.11 or higher
+- Python 3.13 or higher
 - [uv](https://docs.astral.sh/uv/)
 - Telegram account
 
@@ -74,6 +74,23 @@ uv run python bus_bot.py
 | `/start` | Welcome message with bot introduction and disclaimer |
 | `/location` | Get next bus arrival time from your current stop |
 | `/schedule` | View full timetable for a specific stop |
+
+## 🧹 Linting & Formatting
+
+This project uses [ruff](https://docs.astral.sh/ruff/) for linting and formatting, enforced via [pre-commit](https://pre-commit.com/).
+
+Set up the pre-commit hooks after cloning:
+
+```bash
+uv run pre-commit install
+```
+
+Ruff will auto-fix lint issues and format code on every commit. To run manually:
+
+```bash
+uv run ruff check --fix .
+uv run ruff format .
+```
 
 ## 🧪 Testing
 
