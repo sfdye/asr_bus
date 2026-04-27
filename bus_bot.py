@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 import holidays
 from dotenv import load_dotenv
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 
@@ -193,7 +193,9 @@ def format_stop_schedule(trips, stop_key, breaks):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(intro_text, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(
+        intro_text, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove()
+    )
     disclaimer = (
         "⚠️ Take note ah:\n"
         "• Bus timing is estimate only, traffic can affect one.\n"
@@ -202,7 +204,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "• Bus only stop at designated stops.\n"
         "• No waiting or holding the bus at stops!"
     )
-    await update.message.reply_text(disclaimer, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(
+        disclaimer, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove()
+    )
 
 
 def schedule_inline_keyboard():
@@ -279,7 +283,9 @@ def location_inline_keyboard():
 
 async def prompt_location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if get_day_type() == "sunday":
-        await update.message.reply_text(no_sunday_service, parse_mode=ParseMode.HTML)
+        await update.message.reply_text(
+            no_sunday_service, parse_mode=ParseMode.HTML, reply_markup=ReplyKeyboardRemove()
+        )
         return
 
     await update.message.reply_text(
