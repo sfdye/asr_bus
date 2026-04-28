@@ -6,7 +6,7 @@ import holidays
 from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, Defaults
 
 load_dotenv(override=True)
 
@@ -30,7 +30,9 @@ TRIP_TYPE_STOPS = {
     "B": ["asr", "harbourfront"],
 }
 
-TRIP_DESTINATIONS = {"A": "Outram Park MRT", "B": "Harbourfront MRT Exit D"}
+TRIP_DESTINATIONS = {"A": "Outram Park MRT Exit 6/7", "B": "Harbourfront MRT Exit D"}
+
+REMIND_OPTIONS = [3, 5, 10]
 
 weekday_trips = [
     ("07:20", "A"),
@@ -100,7 +102,7 @@ SATURDAY_LAST_DROPOFF = "20:45"
 intro_text = """
 🚌 Eh hello neighbour! I help you check ASR bus timing one.
 
-<b>🗺️ Route:</b> ASR → Outram Park MRT / Harbourfront MRT Exit D
+<b>🗺️ Route:</b> ASR → Outram Park MRT Exit 6/7 / Harbourfront MRT Exit D
 <b>📅 Service days:</b> Mon to Sat (Sunday no bus lah)
 
 Try these:
@@ -268,17 +270,37 @@ async def handle_schedule_callback(update: Update, context: ContextTypes.DEFAULT
     )
 
 
-def location_inline_keyboard():
-    return InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    f"{STOP_EMOJIS[k]} {STOP_NAMES[k]}", callback_data=f"location:{k}"
-                )
-            ]
-            for k in STOP_NAMES
-        ]
-    )
+def location_inline_keyboard(remind_info=None, selected_stop=None, active_reminder=None):
+    rows = []
+    for k in STOP_NAMES:
+        stop_btn = InlineKeyboardButton(
+            f"{STOP_EMOJIS[k]} {STOP_NAMES[k]}", callback_data=f"location:{k}"
+        )
+        rows.append([stop_btn])
+
+        if k != selected_stop or not remind_info:
+            continue
+
+        if active_reminder:
+            cancel_data = (
+                f"cancel:{remind_info['stop_key']}"
+                f":{remind_info['time_compact']}:{remind_info['trip_type']}:{active_reminder}"
+            )
+            label = f"✅ Reminder set: {active_reminder} min before"
+            rows.append([InlineKeyboardButton(label, callback_data=cancel_data)])
+        else:
+            time_btns = []
+            for m in REMIND_OPTIONS:
+                if remind_info["minutes_away"] >= m:
+                    cb = (
+                        f"remind:{remind_info['stop_key']}"
+                        f":{remind_info['time_compact']}:{remind_info['trip_type']}:{m}"
+                    )
+                    time_btns.append(InlineKeyboardButton(f"{m} min", callback_data=cb))
+            if time_btns:
+                rows.append([InlineKeyboardButton("⏰ Remind me:", callback_data="noop")])
+                rows.append(time_btns)
+    return InlineKeyboardMarkup(rows)
 
 
 async def prompt_location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -325,9 +347,31 @@ def build_next_bus_text(stop_key, day_type):
                 lines.append("☝️ Last bus already, no more after this one!")
 
             lines.append(service_notice)
-            return "\n".join(lines)
 
-    return "😢 Aiyoh, no more bus today already!" + "\n" + service_notice
+            remind_info = None
+            if mins >= min(REMIND_OPTIONS):
+                time_compact = time_str.replace(":", "")
+                remind_info = {
+                    "stop_key": stop_key,
+                    "time_compact": time_compact,
+                    "trip_type": trip_type,
+                    "minutes_away": mins,
+                }
+
+            return "\n".join(lines), remind_info
+
+    return "😢 Aiyoh, no more bus today already!" + "\n" + service_notice, None
+
+
+def find_active_reminder(context, user_id, remind_info):
+    if not remind_info:
+        return None
+    prefix = f"remind:{user_id}:{remind_info['stop_key']}:{remind_info['time_compact']}"
+    for m in REMIND_OPTIONS:
+        jobs = context.job_queue.get_jobs_by_name(f"{prefix}:{m}")
+        if jobs:
+            return m
+    return None
 
 
 async def handle_location_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -343,20 +387,141 @@ async def handle_location_callback(update: Update, context: ContextTypes.DEFAULT
         await query.edit_message_text(no_sunday_service, parse_mode=ParseMode.HTML)
         return
 
-    text = build_next_bus_text(stop_key, day_type)
+    text, remind_info = build_next_bus_text(stop_key, day_type)
+    active_reminder = find_active_reminder(context, query.from_user.id, remind_info)
     await query.edit_message_text(
-        text, parse_mode=ParseMode.HTML, reply_markup=location_inline_keyboard()
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=location_inline_keyboard(
+            remind_info, selected_stop=stop_key, active_reminder=active_reminder
+        ),
+    )
+
+
+async def handle_remind_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+
+    parts = query.data.split(":")
+    if len(parts) != 5:
+        return
+    _, stop_key, time_compact, trip_type, lead_str = parts
+    if stop_key not in STOP_NAMES or trip_type not in TRIP_DESTINATIONS:
+        return
+    lead_minutes = int(lead_str)
+
+    departure_time_str = f"{time_compact[:2]}:{time_compact[2:]}"
+    bus_time = datetime.datetime.strptime(departure_time_str, "%H:%M").time()
+    now = get_singapore_now()
+
+    if now.time() > bus_time:
+        await query.edit_message_text(
+            "😅 This bus already gone lah! Use /location to check again.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=location_inline_keyboard(),
+        )
+        return
+
+    fire_time_str = add_minutes(departure_time_str, -lead_minutes)
+    fire_time = datetime.datetime.strptime(fire_time_str, "%H:%M").time()
+    fire_dt = datetime.datetime.combine(now.date(), fire_time, tzinfo=SG_TZ)
+
+    job_name = f"remind:{query.from_user.id}:{stop_key}:{time_compact}:{lead_minutes}"
+    existing = context.job_queue.get_jobs_by_name(job_name)
+    if not existing:
+        reminder_data = {
+            "chat_id": query.message.chat_id,
+            "stop_key": stop_key,
+            "departure_time": departure_time_str,
+            "trip_type": trip_type,
+            "lead_minutes": lead_minutes,
+        }
+        context.job_queue.run_once(
+            send_reminder,
+            when=fire_dt,
+            data=reminder_data,
+            name=job_name,
+            chat_id=query.message.chat_id,
+            user_id=query.from_user.id,
+        )
+
+    day_type = get_day_type()
+    text, remind_info = build_next_bus_text(stop_key, day_type)
+    text += f"\n✅ Reminder set for {fire_time_str}!"
+    await query.edit_message_text(
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=location_inline_keyboard(
+            remind_info, selected_stop=stop_key, active_reminder=lead_minutes
+        ),
+    )
+
+
+async def send_reminder(context: ContextTypes.DEFAULT_TYPE) -> None:
+    data = context.job.data
+    stop_key = data["stop_key"]
+    departure_time = data["departure_time"]
+    trip_type = data["trip_type"]
+    stop_name = STOP_NAMES[stop_key]
+    stop_emoji = STOP_EMOJIS[stop_key]
+    destination = TRIP_DESTINATIONS[trip_type]
+
+    lead_minutes = data["lead_minutes"]
+
+    text = (
+        f"🔔 <b>Bus reminder!</b>\n\n"
+        f"🚌 Bus coming in {lead_minutes} min at {departure_time}\n"
+        f"🚏 {stop_emoji} {stop_name}\n"
+        f"➡️ Going to <b>{destination}</b>\n\n"
+        f"Faster go downstairs ah! 😄"
+    )
+
+    await context.bot.send_message(
+        chat_id=data["chat_id"],
+        text=text,
+        parse_mode=ParseMode.HTML,
+    )
+
+
+async def handle_noop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.callback_query.answer()
+
+
+async def handle_cancel_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+
+    parts = query.data.split(":")
+    if len(parts) != 5:
+        return
+    _, stop_key, time_compact, _trip_type, lead_str = parts
+    if stop_key not in STOP_NAMES:
+        return
+
+    job_name = f"remind:{query.from_user.id}:{stop_key}:{time_compact}:{lead_str}"
+    for job in context.job_queue.get_jobs_by_name(job_name):
+        job.schedule_removal()
+
+    day_type = get_day_type()
+    text, remind_info = build_next_bus_text(stop_key, day_type)
+    await query.edit_message_text(
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=location_inline_keyboard(remind_info, selected_stop=stop_key),
     )
 
 
 def main() -> None:
-    application = Application.builder().token(TOKEN).build()
+    application = Application.builder().token(TOKEN).defaults(Defaults(tzinfo=SG_TZ)).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("schedule", prompt_schedule))
     application.add_handler(CallbackQueryHandler(handle_schedule_callback, pattern=r"^schedule:"))
     application.add_handler(CommandHandler("location", prompt_location))
     application.add_handler(CallbackQueryHandler(handle_location_callback, pattern=r"^location:"))
+    application.add_handler(CallbackQueryHandler(handle_remind_callback, pattern=r"^remind:"))
+    application.add_handler(CallbackQueryHandler(handle_cancel_callback, pattern=r"^cancel:"))
+    application.add_handler(CallbackQueryHandler(handle_noop_callback, pattern=r"^noop$"))
 
     application.run_polling()
 
