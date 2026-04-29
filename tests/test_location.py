@@ -495,7 +495,7 @@ class TestSendReminder:
 
         text = mock_context.bot.send_message.call_args[1]["text"]
         assert "10 min" in text
-        assert "Harbourfront" in text
+        assert "Avenue South Residence" in text
 
 
 class TestHandleCancelCallback:

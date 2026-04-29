@@ -229,7 +229,7 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE) -> None:
     trip_type = data["trip_type"]
     stop_name = STOP_NAMES[stop_key]
     stop_emoji = STOP_EMOJIS[stop_key]
-    destination = TRIP_DESTINATIONS[trip_type]
+    destination = TRIP_DESTINATIONS[trip_type] if stop_key == "asr" else STOP_NAMES["asr"]
 
     lead_minutes = data["lead_minutes"]
 
