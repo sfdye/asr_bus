@@ -5,8 +5,9 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from config import (
-    MIN_REMIND_OPTION,
-    REMIND_OPTIONS,
+    ALL_LEAD_MINUTES,
+    MIN_REMIND_THRESHOLD,
+    REMIND_SCHEDULE,
     SG_TZ,
     STOP_EMOJIS,
     STOP_NAMES,
@@ -25,7 +26,14 @@ from helpers import (
 )
 
 
-def location_inline_keyboard(remind_info=None, selected_stop=None, active_reminder=None):
+def _get_lead_times(minutes_away):
+    for threshold, leads in REMIND_SCHEDULE:
+        if minutes_away >= threshold:
+            return leads
+    return []
+
+
+def location_inline_keyboard(remind_info=None, selected_stop=None, active_reminder=False):
     rows = []
     for k in STOP_NAMES:
         stop_btn = InlineKeyboardButton(
@@ -39,22 +47,15 @@ def location_inline_keyboard(remind_info=None, selected_stop=None, active_remind
         if active_reminder:
             cancel_data = (
                 f"cancel:{remind_info['stop_key']}"
-                f":{remind_info['time_compact']}:{remind_info['trip_type']}:{active_reminder}"
+                f":{remind_info['time_compact']}:{remind_info['trip_type']}"
             )
-            label = f"✅ Reminder set: {active_reminder} min before"
-            rows.append([InlineKeyboardButton(label, callback_data=cancel_data)])
+            rows.append([InlineKeyboardButton("✅ Reminder set", callback_data=cancel_data)])
         else:
-            time_btns = []
-            for m in REMIND_OPTIONS:
-                if remind_info["minutes_away"] >= m:
-                    cb = (
-                        f"remind:{remind_info['stop_key']}"
-                        f":{remind_info['time_compact']}:{remind_info['trip_type']}:{m}"
-                    )
-                    time_btns.append(InlineKeyboardButton(f"{m} min", callback_data=cb))
-            if time_btns:
-                rows.append([InlineKeyboardButton("⏰ Remind me:", callback_data="noop")])
-                rows.append(time_btns)
+            cb = (
+                f"remind:{remind_info['stop_key']}"
+                f":{remind_info['time_compact']}:{remind_info['trip_type']}"
+            )
+            rows.append([InlineKeyboardButton("⏰ Remind me", callback_data=cb)])
     return InlineKeyboardMarkup(rows)
 
 
@@ -104,7 +105,7 @@ def build_next_bus_text(stop_key, day_type):
             lines.append(service_notice)
 
             remind_info = None
-            if mins >= MIN_REMIND_OPTION:
+            if mins >= MIN_REMIND_THRESHOLD:
                 time_compact = time_str.replace(":", "")
                 remind_info = {
                     "stop_key": stop_key,
@@ -120,12 +121,12 @@ def build_next_bus_text(stop_key, day_type):
 
 def find_active_reminder(context, user_id, remind_info):
     if not remind_info:
-        return None
-    for m in REMIND_OPTIONS:
+        return False
+    for m in ALL_LEAD_MINUTES:
         name = _make_job_name(user_id, remind_info["stop_key"], remind_info["time_compact"], m)
         if context.job_queue.get_jobs_by_name(name):
-            return m
-    return None
+            return True
+    return False
 
 
 async def handle_location_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -154,12 +155,12 @@ async def handle_location_callback(update: Update, context: ContextTypes.DEFAULT
 
 def _parse_reminder_callback(data):
     parts = data.split(":")
-    if len(parts) != 5:
+    if len(parts) != 4:
         return None
-    _, stop_key, time_compact, trip_type, lead_str = parts
+    _, stop_key, time_compact, trip_type = parts
     if stop_key not in STOP_NAMES or trip_type not in TRIP_DESTINATIONS:
         return None
-    return stop_key, time_compact, trip_type, int(lead_str)
+    return stop_key, time_compact, trip_type
 
 
 def _make_job_name(user_id, stop_key, time_compact, lead_minutes):
@@ -173,7 +174,7 @@ async def handle_remind_callback(update: Update, context: ContextTypes.DEFAULT_T
     parsed = _parse_reminder_callback(query.data)
     if not parsed:
         return
-    stop_key, time_compact, trip_type, lead_minutes = parsed
+    stop_key, time_compact, trip_type = parsed
 
     departure_time_str = f"{time_compact[:2]}:{time_compact[2:]}"
     bus_time = datetime.datetime.strptime(departure_time_str, "%H:%M").time()
@@ -187,19 +188,27 @@ async def handle_remind_callback(update: Update, context: ContextTypes.DEFAULT_T
         )
         return
 
-    fire_time_str = add_minutes(departure_time_str, -lead_minutes)
-    fire_time = datetime.datetime.strptime(fire_time_str, "%H:%M").time()
-    fire_dt = datetime.datetime.combine(now.date(), fire_time, tzinfo=SG_TZ)
+    mins_away = minutes_until(now.time(), bus_time)
+    lead_times = _get_lead_times(mins_away)
 
-    job_name = _make_job_name(query.from_user.id, stop_key, time_compact, lead_minutes)
-    existing = context.job_queue.get_jobs_by_name(job_name)
-    if not existing:
+    for lead in lead_times:
+        job_name = _make_job_name(query.from_user.id, stop_key, time_compact, lead)
+        if context.job_queue.get_jobs_by_name(job_name):
+            continue
+
+        if lead == 0:
+            fire_dt = now
+        else:
+            fire_time_str = add_minutes(departure_time_str, -lead)
+            fire_time = datetime.datetime.strptime(fire_time_str, "%H:%M").time()
+            fire_dt = datetime.datetime.combine(now.date(), fire_time, tzinfo=SG_TZ)
+
         reminder_data = {
             "chat_id": query.message.chat_id,
             "stop_key": stop_key,
             "departure_time": departure_time_str,
             "trip_type": trip_type,
-            "lead_minutes": lead_minutes,
+            "lead_minutes": lead,
         }
         context.job_queue.run_once(
             send_reminder,
@@ -212,12 +221,11 @@ async def handle_remind_callback(update: Update, context: ContextTypes.DEFAULT_T
 
     day_type = get_day_type()
     text, remind_info = build_next_bus_text(stop_key, day_type)
-    text += f"\n✅ Reminder set for {fire_time_str}!"
     await query.edit_message_text(
         text,
         parse_mode=ParseMode.HTML,
         reply_markup=location_inline_keyboard(
-            remind_info, selected_stop=stop_key, active_reminder=lead_minutes
+            remind_info, selected_stop=stop_key, active_reminder=True
         ),
     )
 
@@ -230,15 +238,24 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE) -> None:
     stop_name = STOP_NAMES[stop_key]
     stop_emoji = STOP_EMOJIS[stop_key]
     destination = TRIP_DESTINATIONS[trip_type] if stop_key == "asr" else STOP_NAMES["asr"]
-
     lead_minutes = data["lead_minutes"]
+
+    if lead_minutes == 0:
+        timing_line = f"🚌 Bus at {departure_time} is here!"
+        cta = "Go queue for boarding! 🚶"
+    elif lead_minutes <= 2:
+        timing_line = f"🚌 Bus arriving in {lead_minutes} min at {departure_time}"
+        cta = "Go go go! 🏃"
+    else:
+        timing_line = f"🚌 Bus coming in {lead_minutes} min at {departure_time}"
+        cta = "Time to get ready! 👟"
 
     text = (
         f"🔔 <b>Bus reminder!</b>\n\n"
-        f"🚌 Bus coming in {lead_minutes} min at {departure_time}\n"
-        f"🚏 {stop_emoji} {stop_name}\n"
+        f"{timing_line}\n"
+        f"{stop_emoji} {stop_name}\n"
         f"➡️ Going to <b>{destination}</b>\n\n"
-        f"Faster go downstairs ah! 😄"
+        f"{cta}"
     )
 
     await context.bot.send_message(
@@ -259,11 +276,12 @@ async def handle_cancel_callback(update: Update, context: ContextTypes.DEFAULT_T
     parsed = _parse_reminder_callback(query.data)
     if not parsed:
         return
-    stop_key, time_compact, _, lead_minutes = parsed
+    stop_key, time_compact, _ = parsed
 
-    job_name = _make_job_name(query.from_user.id, stop_key, time_compact, lead_minutes)
-    for job in context.job_queue.get_jobs_by_name(job_name):
-        job.schedule_removal()
+    for m in ALL_LEAD_MINUTES:
+        job_name = _make_job_name(query.from_user.id, stop_key, time_compact, m)
+        for job in context.job_queue.get_jobs_by_name(job_name):
+            job.schedule_removal()
 
     day_type = get_day_type()
     text, remind_info = build_next_bus_text(stop_key, day_type)

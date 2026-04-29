@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
-from config import REMIND_OPTIONS, STOP_NAMES
+from config import STOP_NAMES
 from handlers.location import (
     build_next_bus_text,
     find_active_reminder,
@@ -112,12 +112,12 @@ class TestLocationInlineKeyboard:
         reply_markup = query.edit_message_text.call_args[1]["reply_markup"]
         cancel_row = reply_markup.inline_keyboard[1]
         assert len(cancel_row) == 1
-        assert "Reminder set: 5 min before" in cancel_row[0].text
+        assert "Reminder set" in cancel_row[0].text
         assert cancel_row[0].callback_data.startswith("cancel:")
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_handle_location_callback_shows_time_options_when_no_job(self, _, mock_now):
+    async def test_handle_location_callback_shows_remind_button_when_no_job(self, _, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 0)))
         query = AsyncMock()
         query.data = "location:asr"
@@ -125,11 +125,10 @@ class TestLocationInlineKeyboard:
         self.mock_update.callback_query = query
         await handle_location_callback(self.mock_update, self.mock_context)
         reply_markup = query.edit_message_text.call_args[1]["reply_markup"]
-        assert reply_markup.inline_keyboard[1][0].callback_data == "noop"
-        time_row = reply_markup.inline_keyboard[2]
-        assert len(time_row) == len(REMIND_OPTIONS)
-        for btn in time_row:
-            assert btn.callback_data.startswith("remind:")
+        remind_row = reply_markup.inline_keyboard[1]
+        assert len(remind_row) == 1
+        assert "Remind me" in remind_row[0].text
+        assert remind_row[0].callback_data.startswith("remind:")
 
 
 class TestNextBusEdgeCases:
@@ -216,23 +215,23 @@ class TestFindActiveReminder:
         "minutes_away": 20,
     }
 
-    def test_returns_none_when_no_jobs(self):
+    def test_returns_false_when_no_jobs(self):
         ctx = Mock()
         ctx.job_queue.get_jobs_by_name.return_value = []
-        assert find_active_reminder(ctx, 12345, self.remind_info) is None
+        assert find_active_reminder(ctx, 12345, self.remind_info) is False
 
-    def test_returns_lead_minutes_when_job_exists(self):
+    def test_returns_true_when_job_exists(self):
         ctx = Mock()
 
         def side_effect(name):
             return [Mock()] if name.endswith(":5") else []
 
         ctx.job_queue.get_jobs_by_name.side_effect = side_effect
-        assert find_active_reminder(ctx, 12345, self.remind_info) == 5
+        assert find_active_reminder(ctx, 12345, self.remind_info) is True
 
-    def test_returns_none_when_remind_info_is_none(self):
+    def test_returns_false_when_remind_info_is_none(self):
         ctx = Mock()
-        assert find_active_reminder(ctx, 12345, None) is None
+        assert find_active_reminder(ctx, 12345, None) is False
 
 
 class TestRemindInfo:
@@ -250,18 +249,18 @@ class TestRemindInfo:
 
     @patch("handlers.location.get_singapore_now")
     def test_remind_info_none_when_bus_too_close(self, mock_now):
-        """At 07:19, next bus at 07:20 is 1 min away — below min(REMIND_OPTIONS)."""
+        """At 07:19, next bus at 07:20 is 1 min away — below MIN_REMIND_THRESHOLD."""
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 19)))
         _, remind_info = build_next_bus_text("asr", "weekday")
         assert remind_info is None
 
     @patch("handlers.location.get_singapore_now")
-    def test_remind_info_present_at_min_option(self, mock_now):
-        """At 07:17, next bus at 07:20 is 3 min away — equals min(REMIND_OPTIONS)."""
-        mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 17)))
+    def test_remind_info_present_at_threshold(self, mock_now):
+        """At 07:18, next bus at 07:20 is 2 min away — equals MIN_REMIND_THRESHOLD."""
+        mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 18)))
         _, remind_info = build_next_bus_text("asr", "weekday")
         assert remind_info is not None
-        assert remind_info["minutes_away"] == 3
+        assert remind_info["minutes_away"] == 2
 
     @patch("handlers.location.get_singapore_now")
     def test_remind_info_none_when_no_buses(self, mock_now):
@@ -302,31 +301,16 @@ class TestLocationKeyboardRemindButton:
             assert len(row) == 1
             assert row[0].callback_data.startswith("location:")
 
-    def test_time_options_shown_for_selected_stop(self):
+    def test_single_remind_button_shown_for_selected_stop(self):
         keyboard = location_inline_keyboard(remind_info=self.remind_info, selected_stop="asr")
         asr_stop_row = keyboard.inline_keyboard[0]
-        assert len(asr_stop_row) == 1
         assert asr_stop_row[0].callback_data == "location:asr"
-        label_row = keyboard.inline_keyboard[1]
-        assert len(label_row) == 1
-        assert label_row[0].callback_data == "noop"
-        assert "Remind me" in label_row[0].text
-        time_row = keyboard.inline_keyboard[2]
-        assert len(time_row) == len(REMIND_OPTIONS)
-        for btn, m in zip(time_row, REMIND_OPTIONS):
-            assert f"remind:asr:0720:A:{m}" == btn.callback_data
-            assert f"{m} min" in btn.text
+        remind_row = keyboard.inline_keyboard[1]
+        assert len(remind_row) == 1
+        assert "Remind me" in remind_row[0].text
+        assert remind_row[0].callback_data == "remind:asr:0720:A"
 
-    def test_options_filtered_by_minutes_away(self):
-        info = {**self.remind_info, "minutes_away": 4}
-        keyboard = location_inline_keyboard(remind_info=info, selected_stop="asr")
-        label_row = keyboard.inline_keyboard[1]
-        assert label_row[0].callback_data == "noop"
-        time_row = keyboard.inline_keyboard[2]
-        assert len(time_row) == 1
-        assert "3 min" in time_row[0].text
-
-    def test_no_options_without_selected_stop(self):
+    def test_no_remind_button_without_selected_stop(self):
         keyboard = location_inline_keyboard(remind_info=self.remind_info)
         for row in keyboard.inline_keyboard:
             assert len(row) == 1
@@ -334,20 +318,20 @@ class TestLocationKeyboardRemindButton:
 
     def test_active_reminder_shows_cancel_button(self):
         keyboard = location_inline_keyboard(
-            remind_info=self.remind_info, selected_stop="asr", active_reminder=5
+            remind_info=self.remind_info, selected_stop="asr", active_reminder=True
         )
         cancel_row = keyboard.inline_keyboard[1]
         assert len(cancel_row) == 1
-        assert cancel_row[0].callback_data == "cancel:asr:0720:A:5"
-        assert "Reminder set: 5 min before" in cancel_row[0].text
+        assert cancel_row[0].callback_data == "cancel:asr:0720:A"
+        assert "Reminder set" in cancel_row[0].text
 
-    def test_active_reminder_hides_time_options(self):
+    def test_active_reminder_hides_remind_button(self):
         keyboard = location_inline_keyboard(
-            remind_info=self.remind_info, selected_stop="asr", active_reminder=10
+            remind_info=self.remind_info, selected_stop="asr", active_reminder=True
         )
         for row in keyboard.inline_keyboard:
             for btn in row:
-                assert not btn.callback_data.startswith("remind:")
+                assert "Remind me" not in btn.text
 
 
 class TestHandleRemindCallback:
@@ -358,10 +342,11 @@ class TestHandleRemindCallback:
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_remind_schedules_job_with_lead_minutes(self, _, mock_now):
+    async def test_remind_schedules_multiple_jobs_for_far_bus(self, _, mock_now):
+        """Bus 20 min away should schedule 2 reminders (5 min + 2 min before)."""
         mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 0, tzinfo=datetime.UTC)
         query = AsyncMock()
-        query.data = "remind:asr:0720:A:5"
+        query.data = "remind:asr:0720:A"
         query.from_user.id = 12345
         query.message.chat_id = 67890
         self.mock_update.callback_query = query
@@ -370,20 +355,18 @@ class TestHandleRemindCallback:
         await handle_remind_callback(self.mock_update, self.mock_context)
 
         query.answer.assert_called_once()
-        self.mock_context.job_queue.run_once.assert_called_once()
-        call_kwargs = self.mock_context.job_queue.run_once.call_args[1]
-        assert call_kwargs["name"] == "remind:12345:asr:0720:5"
-        assert call_kwargs["chat_id"] == 67890
-        assert call_kwargs["data"]["lead_minutes"] == 5
-        text = query.edit_message_text.call_args[0][0]
-        assert "Reminder set for 07:15" in text
+        assert self.mock_context.job_queue.run_once.call_count == 2
+        calls = self.mock_context.job_queue.run_once.call_args_list
+        lead_times = sorted(c[1]["data"]["lead_minutes"] for c in calls)
+        assert lead_times == [2, 5]
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_remind_10_min_schedules_correctly(self, _, mock_now):
-        mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 0, tzinfo=datetime.UTC)
+    async def test_remind_schedules_single_job_for_medium_bus(self, _, mock_now):
+        """Bus 7 min away should schedule 1 reminder (3 min before)."""
+        mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 13, tzinfo=datetime.UTC)
         query = AsyncMock()
-        query.data = "remind:asr:0720:A:10"
+        query.data = "remind:asr:0720:A"
         query.from_user.id = 12345
         query.message.chat_id = 67890
         self.mock_update.callback_query = query
@@ -391,18 +374,17 @@ class TestHandleRemindCallback:
 
         await handle_remind_callback(self.mock_update, self.mock_context)
 
+        assert self.mock_context.job_queue.run_once.call_count == 1
         call_kwargs = self.mock_context.job_queue.run_once.call_args[1]
-        assert call_kwargs["name"] == "remind:12345:asr:0720:10"
-        assert call_kwargs["data"]["lead_minutes"] == 10
-        text = query.edit_message_text.call_args[0][0]
-        assert "Reminder set for 07:10" in text
+        assert call_kwargs["data"]["lead_minutes"] == 3
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_remind_shows_cancel_button(self, _, mock_now):
-        mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 0, tzinfo=datetime.UTC)
+    async def test_remind_schedules_immediate_for_close_bus(self, _, mock_now):
+        """Bus 3 min away should schedule immediate reminder (0 min lead)."""
+        mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 17, tzinfo=datetime.UTC)
         query = AsyncMock()
-        query.data = "remind:asr:0720:A:5"
+        query.data = "remind:asr:0720:A"
         query.from_user.id = 12345
         query.message.chat_id = 67890
         self.mock_update.callback_query = query
@@ -410,17 +392,15 @@ class TestHandleRemindCallback:
 
         await handle_remind_callback(self.mock_update, self.mock_context)
 
-        reply_markup = query.edit_message_text.call_args[1]["reply_markup"]
-        cancel_row = reply_markup.inline_keyboard[1]
-        assert len(cancel_row) == 1
-        assert "Reminder set: 5 min before" in cancel_row[0].text
-        assert cancel_row[0].callback_data == "cancel:asr:0720:A:5"
+        assert self.mock_context.job_queue.run_once.call_count == 1
+        call_kwargs = self.mock_context.job_queue.run_once.call_args[1]
+        assert call_kwargs["data"]["lead_minutes"] == 0
 
     @patch("handlers.location.get_singapore_now")
     async def test_remind_rejects_stale_bus(self, mock_now):
         mock_now.return_value = datetime.datetime(2026, 1, 5, 8, 0, tzinfo=datetime.UTC)
         query = AsyncMock()
-        query.data = "remind:asr:0720:A:5"
+        query.data = "remind:asr:0720:A"
         query.from_user.id = 12345
         query.message.chat_id = 67890
         self.mock_update.callback_query = query
@@ -432,10 +412,11 @@ class TestHandleRemindCallback:
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_remind_dedup_existing_job(self, _, mock_now):
+    async def test_remind_dedup_existing_jobs(self, _, mock_now):
+        """Existing jobs should not be re-created."""
         mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 0, tzinfo=datetime.UTC)
         query = AsyncMock()
-        query.data = "remind:asr:0720:A:5"
+        query.data = "remind:asr:0720:A"
         query.from_user.id = 12345
         query.message.chat_id = 67890
         self.mock_update.callback_query = query
@@ -444,8 +425,24 @@ class TestHandleRemindCallback:
         await handle_remind_callback(self.mock_update, self.mock_context)
 
         self.mock_context.job_queue.run_once.assert_not_called()
-        text = query.edit_message_text.call_args[0][0]
-        assert "Reminder set for 07:15" in text
+
+    @patch("handlers.location.get_singapore_now")
+    @patch("handlers.location.get_day_type", return_value="weekday")
+    async def test_remind_shows_cancel_button(self, _, mock_now):
+        mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 0, tzinfo=datetime.UTC)
+        query = AsyncMock()
+        query.data = "remind:asr:0720:A"
+        query.from_user.id = 12345
+        query.message.chat_id = 67890
+        self.mock_update.callback_query = query
+        self.mock_context.job_queue.get_jobs_by_name.return_value = []
+
+        await handle_remind_callback(self.mock_update, self.mock_context)
+
+        reply_markup = query.edit_message_text.call_args[1]["reply_markup"]
+        cancel_row = reply_markup.inline_keyboard[1]
+        assert len(cancel_row) == 1
+        assert "Reminder set" in cancel_row[0].text
 
     async def test_remind_rejects_invalid_data(self):
         query = AsyncMock()
@@ -457,7 +454,8 @@ class TestHandleRemindCallback:
 
 
 class TestSendReminder:
-    async def test_send_reminder_message(self):
+    async def test_early_reminder_tone(self):
+        """5 min lead → 'time to get ready' tone."""
         mock_context = Mock()
         mock_context.bot.send_message = AsyncMock()
         mock_context.job.data = {
@@ -470,17 +468,31 @@ class TestSendReminder:
 
         await send_reminder(mock_context)
 
-        mock_context.bot.send_message.assert_called_once()
-        call_kwargs = mock_context.bot.send_message.call_args[1]
-        assert call_kwargs["chat_id"] == 67890
-        text = call_kwargs["text"]
-        assert "Bus reminder" in text
-        assert "08:00" in text
-        assert "Avenue South Residence" in text
-        assert "Outram Park MRT" in text
+        text = mock_context.bot.send_message.call_args[1]["text"]
         assert "5 min" in text
+        assert "get ready" in text.lower()
+        assert "Outram Park MRT" in text
 
-    async def test_send_reminder_with_10_min_lead(self):
+    async def test_urgent_reminder_tone(self):
+        """2 min lead → 'go go go' tone."""
+        mock_context = Mock()
+        mock_context.bot.send_message = AsyncMock()
+        mock_context.job.data = {
+            "chat_id": 67890,
+            "stop_key": "asr",
+            "departure_time": "08:00",
+            "trip_type": "A",
+            "lead_minutes": 2,
+        }
+
+        await send_reminder(mock_context)
+
+        text = mock_context.bot.send_message.call_args[1]["text"]
+        assert "2 min" in text
+        assert "go go go" in text.lower()
+
+    async def test_immediate_reminder_tone(self):
+        """0 min lead → 'queue for boarding' tone."""
         mock_context = Mock()
         mock_context.bot.send_message = AsyncMock()
         mock_context.job.data = {
@@ -488,13 +500,29 @@ class TestSendReminder:
             "stop_key": "harbourfront",
             "departure_time": "10:10",
             "trip_type": "B",
-            "lead_minutes": 10,
+            "lead_minutes": 0,
         }
 
         await send_reminder(mock_context)
 
         text = mock_context.bot.send_message.call_args[1]["text"]
-        assert "10 min" in text
+        assert "boarding" in text.lower()
+        assert "Avenue South Residence" in text
+
+    async def test_non_asr_stop_shows_asr_destination(self):
+        mock_context = Mock()
+        mock_context.bot.send_message = AsyncMock()
+        mock_context.job.data = {
+            "chat_id": 67890,
+            "stop_key": "harbourfront",
+            "departure_time": "10:10",
+            "trip_type": "B",
+            "lead_minutes": 3,
+        }
+
+        await send_reminder(mock_context)
+
+        text = mock_context.bot.send_message.call_args[1]["text"]
         assert "Avenue South Residence" in text
 
 
@@ -506,40 +534,45 @@ class TestHandleCancelCallback:
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_cancel_removes_job_and_shows_time_options(self, _, mock_now):
+    async def test_cancel_removes_all_jobs(self, _, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 0)))
-        mock_job = Mock()
-        self.mock_context.job_queue.get_jobs_by_name.return_value = [mock_job]
+        mock_jobs = {":5": [Mock()], ":2": [Mock()]}
+
+        def side_effect(name):
+            for suffix, jobs in mock_jobs.items():
+                if name.endswith(suffix):
+                    return jobs
+            return []
+
+        self.mock_context.job_queue.get_jobs_by_name.side_effect = side_effect
         query = AsyncMock()
-        query.data = "cancel:asr:0720:A:5"
+        query.data = "cancel:asr:0720:A"
         query.from_user.id = 12345
         self.mock_update.callback_query = query
 
         await handle_cancel_callback(self.mock_update, self.mock_context)
 
-        mock_job.schedule_removal.assert_called_once()
-        query.answer.assert_called_once()
-        reply_markup = query.edit_message_text.call_args[1]["reply_markup"]
-        assert reply_markup.inline_keyboard[1][0].callback_data == "noop"
-        time_row = reply_markup.inline_keyboard[2]
-        assert len(time_row) == len(REMIND_OPTIONS)
-        for btn in time_row:
-            assert btn.callback_data.startswith("remind:")
+        for jobs in mock_jobs.values():
+            for job in jobs:
+                job.schedule_removal.assert_called_once()
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_cancel_shows_bus_timing_text(self, _, mock_now):
+    async def test_cancel_shows_remind_button_again(self, _, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 0)))
         self.mock_context.job_queue.get_jobs_by_name.return_value = []
         query = AsyncMock()
-        query.data = "cancel:asr:0720:A:5"
+        query.data = "cancel:asr:0720:A"
         query.from_user.id = 12345
         self.mock_update.callback_query = query
 
         await handle_cancel_callback(self.mock_update, self.mock_context)
 
-        text = query.edit_message_text.call_args[0][0]
-        assert "min" in text
+        query.answer.assert_called_once()
+        reply_markup = query.edit_message_text.call_args[1]["reply_markup"]
+        remind_row = reply_markup.inline_keyboard[1]
+        assert len(remind_row) == 1
+        assert "Remind me" in remind_row[0].text
 
     async def test_cancel_rejects_invalid_data(self):
         query = AsyncMock()

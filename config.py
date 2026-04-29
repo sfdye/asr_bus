@@ -28,8 +28,9 @@ TRIP_TYPE_STOPS = {
 
 TRIP_DESTINATIONS = {"A": "Outram Park MRT Exit 6/7", "B": "Harbourfront MRT Exit D"}
 
-REMIND_OPTIONS = [3, 5, 10]
-MIN_REMIND_OPTION = min(REMIND_OPTIONS)
+REMIND_SCHEDULE = [(10, [5, 2]), (5, [3]), (2, [0])]
+ALL_LEAD_MINUTES = sorted({m for _, leads in REMIND_SCHEDULE for m in leads})
+MIN_REMIND_THRESHOLD = 2
 
 weekday_trips = [
     ("07:20", "A"),
