@@ -343,7 +343,7 @@ class TestHandleRemindCallback:
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
     async def test_remind_schedules_multiple_jobs_for_far_bus(self, _, mock_now):
-        """Bus 20 min away should schedule 2 reminders (5 min + 2 min before)."""
+        """Bus 20 min away should schedule 3 reminders (5 min + 2 min + departure)."""
         mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 0, tzinfo=datetime.UTC)
         query = AsyncMock()
         query.data = "remind:asr:0720:A"
@@ -355,15 +355,15 @@ class TestHandleRemindCallback:
         await handle_remind_callback(self.mock_update, self.mock_context)
 
         query.answer.assert_called_once()
-        assert self.mock_context.job_queue.run_once.call_count == 2
+        assert self.mock_context.job_queue.run_once.call_count == 3
         calls = self.mock_context.job_queue.run_once.call_args_list
         lead_times = sorted(c[1]["data"]["lead_minutes"] for c in calls)
-        assert lead_times == [2, 5]
+        assert lead_times == [0, 2, 5]
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
-    async def test_remind_schedules_single_job_for_medium_bus(self, _, mock_now):
-        """Bus 7 min away should schedule 1 reminder (3 min before)."""
+    async def test_remind_schedules_two_jobs_for_medium_bus(self, _, mock_now):
+        """Bus 7 min away should schedule 2 reminders (3 min before + departure)."""
         mock_now.return_value = datetime.datetime(2026, 1, 5, 7, 13, tzinfo=datetime.UTC)
         query = AsyncMock()
         query.data = "remind:asr:0720:A"
@@ -374,9 +374,10 @@ class TestHandleRemindCallback:
 
         await handle_remind_callback(self.mock_update, self.mock_context)
 
-        assert self.mock_context.job_queue.run_once.call_count == 1
-        call_kwargs = self.mock_context.job_queue.run_once.call_args[1]
-        assert call_kwargs["data"]["lead_minutes"] == 3
+        assert self.mock_context.job_queue.run_once.call_count == 2
+        calls = self.mock_context.job_queue.run_once.call_args_list
+        lead_times = sorted(c[1]["data"]["lead_minutes"] for c in calls)
+        assert lead_times == [0, 3]
 
     @patch("handlers.location.get_singapore_now")
     @patch("handlers.location.get_day_type", return_value="weekday")
@@ -536,7 +537,7 @@ class TestHandleCancelCallback:
     @patch("handlers.location.get_day_type", return_value="weekday")
     async def test_cancel_removes_all_jobs(self, _, mock_now):
         mock_now.return_value = Mock(time=Mock(return_value=datetime.time(7, 0)))
-        mock_jobs = {":5": [Mock()], ":2": [Mock()]}
+        mock_jobs = {":5": [Mock()], ":2": [Mock()], ":0": [Mock()]}
 
         def side_effect(name):
             for suffix, jobs in mock_jobs.items():

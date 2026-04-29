@@ -196,12 +196,11 @@ async def handle_remind_callback(update: Update, context: ContextTypes.DEFAULT_T
         if context.job_queue.get_jobs_by_name(job_name):
             continue
 
-        if lead == 0:
+        fire_time_str = add_minutes(departure_time_str, -lead)
+        fire_time = datetime.datetime.strptime(fire_time_str, "%H:%M").time()
+        fire_dt = datetime.datetime.combine(now.date(), fire_time, tzinfo=SG_TZ)
+        if fire_dt <= now:
             fire_dt = now
-        else:
-            fire_time_str = add_minutes(departure_time_str, -lead)
-            fire_time = datetime.datetime.strptime(fire_time_str, "%H:%M").time()
-            fire_dt = datetime.datetime.combine(now.date(), fire_time, tzinfo=SG_TZ)
 
         reminder_data = {
             "chat_id": query.message.chat_id,
