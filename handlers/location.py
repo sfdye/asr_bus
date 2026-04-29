@@ -8,6 +8,7 @@ from config import (
     ALL_LEAD_MINUTES,
     MIN_REMIND_THRESHOLD,
     REMIND_SCHEDULE,
+    REMIND_TONES,
     SG_TZ,
     STOP_EMOJIS,
     STOP_NAMES,
@@ -239,15 +240,8 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE) -> None:
     destination = TRIP_DESTINATIONS[trip_type] if stop_key == "asr" else STOP_NAMES["asr"]
     lead_minutes = data["lead_minutes"]
 
-    if lead_minutes == 0:
-        timing_line = f"🚌 Bus at {departure_time} is here!"
-        cta = "Go queue for boarding! 🚶"
-    elif lead_minutes <= 2:
-        timing_line = f"🚌 Bus arriving in {lead_minutes} min at {departure_time}"
-        cta = "Go go go! 🏃"
-    else:
-        timing_line = f"🚌 Bus coming in {lead_minutes} min at {departure_time}"
-        cta = "Time to get ready! 👟"
+    timing_template, cta = REMIND_TONES[lead_minutes]
+    timing_line = timing_template.format(lead=lead_minutes, time=departure_time)
 
     text = (
         f"🔔 <b>Bus reminder!</b>\n\n"

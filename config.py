@@ -28,9 +28,15 @@ TRIP_TYPE_STOPS = {
 
 TRIP_DESTINATIONS = {"A": "Outram Park MRT Exit 6/7", "B": "Harbourfront MRT Exit D"}
 
-REMIND_SCHEDULE = [(10, [5, 2, 0]), (5, [3, 0]), (2, [0])]
+REMIND_SCHEDULE = [(10, [5, 3, 1]), (5, [3, 1]), (3, [1])]
 ALL_LEAD_MINUTES = sorted({m for _, leads in REMIND_SCHEDULE for m in leads})
 MIN_REMIND_THRESHOLD = 2
+
+REMIND_TONES = {
+    5: ("🚌 Bus coming in {lead} min at {time}", "Time to get ready! 👟"),
+    3: ("🚌 Bus arriving in {lead} min at {time}", "Go go go! 🏃"),
+    1: ("🚌 Bus at {time} is here!", "Go queue for boarding! 🚶"),
+}
 
 weekday_trips = [
     ("07:20", "A"),
