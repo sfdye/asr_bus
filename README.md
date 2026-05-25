@@ -140,7 +140,24 @@ uv run python bus_bot.py
 
 ### Production Deployment
 
-Deployed on [Railway](https://railway.com). Pushes to `master` trigger automatic deploys.
+Deployed on Raspberry Pi 4.
+
+```bash
+ssh raspberrypi.local
+
+
+cat /etc/supervisor/conf.d/asr_bus.conf
+
+[program:asr_bus]
+user=pi
+directory=/home/pi/Code/asr_bus
+command=/home/pi/.local/bin/uv run python bus_bot.py
+
+autostart=true
+autorestart=true
+stdout_logfile=/home/pi/Code/asr_bus/stdout.log
+stderr_logfile=/home/pi/Code/asr_bus/stderr.log
+```
 
 ---
 
