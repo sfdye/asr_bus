@@ -4,10 +4,10 @@
 // Default: asr
 
 const STOPS = {
-  asr: { name: "ASR", emoji: "🏠", offset: 0, lat: 1.2748, lon: 103.8345 },
-  outram6: { name: "Outram Exit 6", emoji: "🚇", offset: 6, lat: 1.2803, lon: 103.8396 },
-  outram7: { name: "Outram Exit 7", emoji: "🚇", offset: 8, lat: 1.2800, lon: 103.8390 },
-  harbourfront: { name: "Harbourfront", emoji: "🛍️", offset: 10, lat: 1.2654, lon: 103.8215 },
+  asr: { name: "ASR", emoji: "🏠", offset: 0, lat: 1.276626, lon: 103.830288 },
+  outram6: { name: "Outram Exit 6", emoji: "🚇", offset: 6, lat: 1.2789872116033196, lon: 103.83856904062411 },
+  outram7: { name: "Outram Exit 7", emoji: "🚇", offset: 8, lat: 1.280980927082586, lon: 103.83878336326352 },
+  harbourfront: { name: "Harbourfront", emoji: "🛍️", offset: 10, lat: 1.265883572108345, lon: 103.82149497860111 },
 };
 
 const TRIP_STOPS = {
