@@ -171,7 +171,7 @@ if (config.runsInWidget) {
 
     const main = widget.addStack();
     main.layoutHorizontally();
-    const minsText = main.addText(`${bus.mins} min`);
+    const minsText = main.addText(`~${bus.mins} min`);
     minsText.font = Font.boldSystemFont(26);
     main.addSpacer(4);
     const timeText = main.addText(bus.time);
@@ -180,17 +180,17 @@ if (config.runsInWidget) {
 
     widget.addSpacer(2);
 
-    if (resolvedKey === "asr") {
-      const dest = widget.addStack();
-      const destText = dest.addText(`→ ${bus.dest}`);
-      destText.font = Font.systemFont(11);
-      destText.textOpacity = 0.7;
-    }
+    const dest = widget.addStack();
+    const destLabel = resolvedKey === "asr" ? `→ ${bus.dest}` : "→ 🏠 ASR";
+    const destText = dest.addText(destLabel);
+    destText.font = Font.systemFont(11);
+    destText.textOpacity = 0.7;
 
     if (result.buses.length > 1) {
       const next = result.buses[1];
       const nextRow = widget.addStack();
-      const nextText = nextRow.addText(`Next: ${next.time} (${next.mins} min)`);
+      const nextLabel = resolvedKey === "asr" ? `Next: ${next.time} → ${next.dest}` : `Next: ${next.time}`;
+      const nextText = nextRow.addText(nextLabel);
       nextText.font = Font.systemFont(11);
       nextText.textOpacity = 0.5;
     }
