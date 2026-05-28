@@ -15,7 +15,7 @@ const TRIP_STOPS = {
   B: ["asr", "harbourfront"],
 };
 
-const DESTINATIONS = { A: "Outram", B: "HFront" };
+const DESTINATIONS = { A: "🚇 Outram Park", B: "🛍️ Harbourfront" };
 
 const WEEKDAY_TRIPS = [
   ["07:20", "A"], ["07:40", "A"], ["08:00", "A"], ["08:20", "A"],
