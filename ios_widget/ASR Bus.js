@@ -43,7 +43,10 @@ const SG_HOLIDAYS = [
 ];
 
 function getSGTime() {
-  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" }));
+  const now = new Date();
+  const sgOffset = 8 * 60;
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utcMs + sgOffset * 60000);
 }
 
 function isHoliday(date) {
