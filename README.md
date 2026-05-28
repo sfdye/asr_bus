@@ -159,6 +159,47 @@ stdout_logfile=/home/pi/Code/asr_bus/stdout.log
 stderr_logfile=/home/pi/Code/asr_bus/stderr.log
 ```
 
+## 📱 iOS Lock Screen Widget (Scriptable)
+
+A lock screen widget showing next bus timing, auto-detecting your nearest stop.
+
+### Setup
+
+1. Install [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) from the App Store (free)
+2. Open Scriptable → tap **+** → paste the contents of [`ios_widget/ASR Bus.js`](ios_widget/ASR%20Bus.js)
+3. Name the script "ASR Bus"
+4. Grant Scriptable "Always" location permission (Settings → Privacy → Location Services → Scriptable)
+
+### Add Lock Screen Widget
+
+1. Long-press your lock screen → **Customize** → **Lock Screen**
+2. Tap the widget area → Add **Scriptable**
+3. Long-press the widget → **Edit Widget**
+4. Set **Script** to "ASR Bus"
+5. Set **Parameter** (optional, see below)
+
+### Widget Parameters
+
+| Parameter | Stop |
+|-----------|------|
+| *(empty)* or `auto` | Auto-detect nearest stop via GPS |
+| `asr` | Avenue South Residence |
+| `outram6` | Outram Park MRT Exit 6 |
+| `outram7` | Outram Park MRT Exit 7 |
+| `harbourfront` | Harbourfront MRT Exit D |
+
+### What it shows
+
+- **Minutes until next bus** (bold, large)
+- **Arrival/departure time**
+- **Destination** (when departing from ASR)
+- **Following bus** timing
+
+### Notes
+
+- Widget refreshes every ~5 minutes (iOS controls actual refresh rate)
+- No internet needed — schedule is embedded in the script
+
 ---
 
 **Built with ❤️ for the ASR community** 🏠🚌
