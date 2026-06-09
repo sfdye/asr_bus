@@ -25,10 +25,98 @@
       max-width: 400px;
       width: 100%;
     }
-    .header { text-align: center; margin-bottom: 32px; }
+    .header { text-align: center; margin-bottom: 24px; }
     .emoji-hero { font-size: 56px; margin-bottom: 12px; }
     h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
     .subtitle { font-size: 14px; color: rgba(255,255,255,0.6); }
+
+    /* Widget mockup */
+    .widget-preview {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin: 20px auto 0;
+      max-width: 180px;
+      text-align: left;
+    }
+    .widget-header {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    .widget-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .widget-mins {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+    .widget-time {
+      font-size: 13px;
+      opacity: 0.6;
+    }
+    .widget-dest {
+      font-size: 11px;
+      opacity: 0.6;
+      margin-top: 3px;
+    }
+    .widget-next {
+      font-size: 10px;
+      opacity: 0.4;
+      margin-top: 2px;
+    }
+    .widget-caption {
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 10px;
+    }
+
+    /* Features */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .feature {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 14px 12px;
+      font-size: 12px;
+      text-align: left;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.4;
+    }
+    .feature .icon { font-size: 20px; margin-bottom: 6px; }
+    .feature .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 4px;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 24px 0;
+    }
+
+    /* Steps */
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
     .step {
       display: flex;
       align-items: flex-start;
@@ -74,33 +162,8 @@
     }
     .step-text strong { color: rgba(255,255,255,0.9); }
     .hidden { display: none; }
-    .divider {
-      width: 100%;
-      height: 1px;
-      background: rgba(255,255,255,0.1);
-      margin: 24px 0;
-    }
-    .features {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .feature {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 14px 12px;
-      font-size: 12px;
-      text-align: left;
-      color: rgba(255,255,255,0.5);
-      line-height: 1.4;
-    }
-    .feature .icon { font-size: 20px; margin-bottom: 6px; }
-    .feature .title {
-      font-size: 13px;
-      font-weight: 600;
-      color: rgba(255,255,255,0.85);
-      margin-bottom: 4px;
-    }
+
+    /* Params */
     .params {
       margin-top: 20px;
       text-align: left;
@@ -141,11 +204,49 @@
       <div class="emoji-hero">🚌</div>
       <h1>ASR Bus Widget</h1>
       <p class="subtitle">Lock screen bus timings for Avenue South Residence</p>
+
+      <div class="widget-preview">
+        <div class="widget-header">🚌 ASR</div>
+        <div class="widget-main">
+          <span class="widget-mins">~6 min</span>
+          <span class="widget-time">08:20</span>
+        </div>
+        <div class="widget-dest">→ 🚇 Outram Park</div>
+        <div class="widget-next">Next: 08:40 → 🚇 Outram Park</div>
+      </div>
+      <p class="widget-caption">What it looks like on your lock screen</p>
     </div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="icon">🔒</div>
+        <div class="title">Lock Screen</div>
+        Check next bus at a glance without unlocking your phone.
+      </div>
+      <div class="feature">
+        <div class="icon">📍</div>
+        <div class="title">Smart Location</div>
+        Auto-detects nearest stop via GPS. Completely optional — set a fixed stop for privacy.
+      </div>
+      <div class="feature">
+        <div class="icon">🌏</div>
+        <div class="title">Multilingual</div>
+        English & Chinese, auto-detected from your device language setting.
+      </div>
+      <div class="feature">
+        <div class="icon">📶</div>
+        <div class="title">Works Offline</div>
+        Schedule is embedded in the widget — no internet or server needed.
+      </div>
+    </div>
+
+    <div class="divider"></div>
 
     <div class="desktop-msg" id="desktopMsg">
       Open this page on your iPhone to install.
     </div>
+
+    <p class="section-label">Install</p>
 
     <div class="step">
       <div class="step-num">1</div>
@@ -175,7 +276,7 @@
     </div>
 
     <div class="step">
-      <div class="step-num" id="remainingStart">4</div>
+      <div class="step-num">4</div>
       <div class="step-content">
         <p class="step-text">Rename the script to <strong>ASR Bus</strong></p>
       </div>
@@ -196,34 +297,6 @@
     </div>
 
     <div class="divider"></div>
-
-    <div class="features">
-      <div class="feature">
-        <div class="icon">📍</div>
-        <div class="title">Smart Location</div>
-        Auto-detects nearest stop via GPS. Completely optional — you can set a fixed stop instead.
-      </div>
-      <div class="feature">
-        <div class="icon">🔒</div>
-        <div class="title">Lock Screen</div>
-        See next bus at a glance without unlocking your phone.
-      </div>
-      <div class="feature">
-        <div class="icon">🌏</div>
-        <div class="title">Multilingual</div>
-        English & Chinese, auto-detected from your device language.
-      </div>
-      <div class="feature">
-        <div class="icon">📶</div>
-        <div class="title">Works Offline</div>
-        Schedule is embedded — no internet or server needed.
-      </div>
-      <div class="feature">
-        <div class="icon">⏱️</div>
-        <div class="title">Next Bus</div>
-        Shows minutes until arrival, departure time, and destination.
-      </div>
-    </div>
 
     <div class="params">
       <p class="params-title">Widget Parameter (optional)</p>
