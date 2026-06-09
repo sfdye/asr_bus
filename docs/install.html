@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install ASR Bus Widget</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .emoji-hero { font-size: 56px; margin-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.6); margin-bottom: 32px; }
+    .install-btn {
+      display: inline-block;
+      background: #30d158;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      padding: 16px 32px;
+      border-radius: 14px;
+      text-decoration: none;
+      transition: transform 0.1s, opacity 0.2s;
+      width: 100%;
+    }
+    .install-btn:active { transform: scale(0.97); opacity: 0.9; }
+    .prereq {
+      margin-top: 16px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+    }
+    .prereq a { color: rgba(255,255,255,0.7); }
+    .qr-section {
+      margin-top: 32px;
+      display: none;
+    }
+    .qr-section img {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      width: 200px;
+      height: 200px;
+    }
+    .qr-label {
+      margin-top: 12px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+    }
+    .steps {
+      margin-top: 32px;
+      text-align: left;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+    }
+    .steps li {
+      counter-increment: step;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .steps li:last-child { border-bottom: none; }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      background: rgba(48, 209, 88, 0.2);
+      color: #30d158;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 24px 0;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .feature {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 14px 12px;
+      font-size: 13px;
+    }
+    .feature .icon { font-size: 20px; margin-bottom: 6px; }
+    .feature .label { color: rgba(255,255,255,0.7); }
+    .desktop-msg {
+      display: none;
+      background: rgba(255, 204, 0, 0.1);
+      border: 1px solid rgba(255, 204, 0, 0.3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: rgba(255, 204, 0, 0.9);
+    }
+    .auto-redirect-notice {
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="emoji-hero">🚌</div>
+    <h1>ASR Bus Widget</h1>
+    <p class="subtitle">Lock screen bus timings for Avenue South Residence</p>
+
+    <div class="desktop-msg" id="desktopMsg">
+      Open this page on your iPhone to install, or scan the QR code below.
+    </div>
+
+    <a href="scriptable:///add?scriptName=ASR%20Bus&url=https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/ASR%20Bus.js"
+       class="install-btn" id="installBtn">
+      Install Widget
+    </a>
+    <p class="prereq">
+      Requires <a href="https://apps.apple.com/app/scriptable/id1405459188">Scriptable</a> (free)
+    </p>
+    <p class="auto-redirect-notice" id="autoRedirect">Redirecting to Scriptable...</p>
+
+    <div class="qr-section" id="qrSection">
+      <img src="../ios_widget/qr_import.svg" alt="QR code to install ASR Bus widget" />
+      <p class="qr-label">Scan with iPhone camera</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="icon">📍</div>
+        <div class="label">Auto-detects nearest stop</div>
+      </div>
+      <div class="feature">
+        <div class="icon">⏱️</div>
+        <div class="label">Minutes until next bus</div>
+      </div>
+      <div class="feature">
+        <div class="icon">🌏</div>
+        <div class="label">English & Chinese</div>
+      </div>
+      <div class="feature">
+        <div class="icon">📶</div>
+        <div class="label">Works offline</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <ol class="steps">
+      <li>Tap <strong>Install Widget</strong> above (or scan QR code)</li>
+      <li>In Scriptable, tap <strong>Add Script</strong> to confirm</li>
+      <li>Allow location access: Settings → Privacy → Location → Scriptable → <strong>Always</strong></li>
+      <li>Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget</li>
+      <li>Edit widget → set Script to <strong>ASR Bus</strong></li>
+    </ol>
+  </div>
+
+  <script>
+    (function() {
+      var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      var qr = document.getElementById('qrSection');
+      var btn = document.getElementById('installBtn');
+      var msg = document.getElementById('desktopMsg');
+      var notice = document.getElementById('autoRedirect');
+
+      if (!isIOS) {
+        qr.style.display = 'block';
+        msg.style.display = 'block';
+        btn.style.display = 'none';
+      } else {
+        notice.style.display = 'block';
+        setTimeout(function() {
+          window.location.href = btn.href;
+        }, 1500);
+      }
+    })();
+  </script>
+</body>
+</html>

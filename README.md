@@ -166,9 +166,9 @@ A lock screen widget showing next bus timing, auto-detecting your nearest stop. 
 ### One-Click Install
 
 1. Install [Scriptable](https://apps.apple.com/app/scriptable/id1405459188) from the App Store (free)
-2. Tap the link below (or scan the QR code) on your iPhone:
+2. Open the install page on your iPhone (auto-redirects to Scriptable):
 
-   **👉 [Install ASR Bus Widget](scriptable:///add?scriptName=ASR%20Bus&url=https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/ASR%20Bus.js)**
+   **👉 [Install ASR Bus Widget](https://sfdye.github.io/asr_bus/install.html)**
 
    Or scan this QR code with your iPhone camera:
 
