@@ -130,15 +130,15 @@
       Open this page on your iPhone to install.
     </div>
 
-    <button class="install-btn" id="copyBtn" onclick="copyScript()">
-      Copy Script to Clipboard
-    </button>
-    <a href="scriptable:///add" class="install-btn" id="openBtn" style="display:none; margin-top:12px; background:#007aff;">
-      Open Scriptable → Paste
+    <a href="https://apps.apple.com/app/scriptable/id1405459188" class="install-btn" id="appStoreBtn" style="background:#007aff; margin-bottom:12px;">
+      1. Get Scriptable (Free)
     </a>
-    <p class="prereq">
-      Requires <a href="https://apps.apple.com/app/scriptable/id1405459188">Scriptable</a> (free)
-    </p>
+    <button class="install-btn" id="copyBtn" onclick="copyScript()">
+      2. Copy Script to Clipboard
+    </button>
+    <a href="scriptable:///add" class="install-btn" id="openBtn" style="display:none; margin-top:12px; background:#5856d6;">
+      3. Open Scriptable → Paste
+    </a>
     <p class="auto-redirect-notice" id="iosHint"></p>
 
 
@@ -166,12 +166,27 @@
     <div class="divider"></div>
 
     <ol class="steps">
+      <li>Install <strong>Scriptable</strong> from the App Store (tap button above)</li>
       <li>Tap <strong>Copy Script</strong> above</li>
       <li>Tap <strong>Open Scriptable</strong> → Paste into the new script</li>
       <li>Rename the script to <strong>ASR Bus</strong></li>
       <li>Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong></li>
       <li>Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → set to <strong>ASR Bus</strong></li>
     </ol>
+
+    <div class="divider"></div>
+
+    <div style="text-align:left;">
+      <p style="font-size:14px; font-weight:600; margin-bottom:8px;">Widget Parameter (optional)</p>
+      <p style="font-size:12px; color:rgba(255,255,255,0.6); margin-bottom:8px;">Set in widget config to pin a stop:</p>
+      <div style="font-size:12px; color:rgba(255,255,255,0.5); line-height:1.8;">
+        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">auto</code> or empty — nearest stop via GPS<br>
+        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">asr</code> — Avenue South Residence<br>
+        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">outram6</code> — Outram Park Exit 6<br>
+        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">outram7</code> — Outram Park Exit 7<br>
+        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">harbourfront</code> — Harbourfront Exit D
+      </div>
+    </div>
   </div>
 
   <script>
