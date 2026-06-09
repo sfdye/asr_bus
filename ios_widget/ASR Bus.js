@@ -3,11 +3,37 @@
 // Configure stop via widget parameter: asr, outram6, outram7, harbourfront
 // Default: asr
 
+const lang = Device.language().startsWith("zh") ? "zh" : "en";
+
+const STRINGS = {
+  en: {
+    noSunService: "🚌 No Sun service",
+    noMoreBus: "🚌 No more bus today",
+    noSunServiceDetail: "No service on Sundays",
+    noMoreBusDetail: "No more buses today",
+    min: "min",
+    next: "Next:",
+    widgetParam: "Widget param: asr, outram6, outram7, harbourfront",
+    setInConfig: "Set in widget config",
+  },
+  zh: {
+    noSunService: "🚌 周日无班车",
+    noMoreBus: "🚌 今日已无班车",
+    noSunServiceDetail: "周日无班车服务",
+    noMoreBusDetail: "今日已无班车",
+    min: "分钟",
+    next: "下一班:",
+    widgetParam: "参数: asr, outram6, outram7, harbourfront",
+    setInConfig: "在小组件配置中设置",
+  },
+};
+const T = STRINGS[lang];
+
 const STOPS = {
   asr: { name: "ASR", emoji: "🏠", offset: 0, lat: 1.276626, lon: 103.830288 },
-  outram6: { name: "Outram Exit 6", emoji: "🚇", offset: 6, lat: 1.2789872116033196, lon: 103.83856904062411 },
-  outram7: { name: "Outram Exit 7", emoji: "🚇", offset: 8, lat: 1.280980927082586, lon: 103.83878336326352 },
-  harbourfront: { name: "Harbourfront", emoji: "🛍️", offset: 10, lat: 1.265883572108345, lon: 103.82149497860111 },
+  outram6: { name: lang === "zh" ? "欧南园6号口" : "Outram Exit 6", emoji: "🚇", offset: 6, lat: 1.2789872116033196, lon: 103.83856904062411 },
+  outram7: { name: lang === "zh" ? "欧南园7号口" : "Outram Exit 7", emoji: "🚇", offset: 8, lat: 1.280980927082586, lon: 103.83878336326352 },
+  harbourfront: { name: lang === "zh" ? "港湾" : "Harbourfront", emoji: "🛍️", offset: 10, lat: 1.265883572108345, lon: 103.82149497860111 },
 };
 
 const TRIP_STOPS = {
@@ -15,7 +41,10 @@ const TRIP_STOPS = {
   B: ["asr", "harbourfront"],
 };
 
-const DESTINATIONS = { A: "🚇 Outram Park", B: "🛍️ Harbourfront" };
+const DESTINATIONS = {
+  A: lang === "zh" ? "🚇 欧南园" : "🚇 Outram Park",
+  B: lang === "zh" ? "🛍️ 港湾" : "🛍️ Harbourfront",
+};
 
 const WEEKDAY_TRIPS = [
   ["07:20", "A"], ["07:40", "A"], ["08:00", "A"], ["08:20", "A"],
@@ -156,10 +185,10 @@ if (config.runsInWidget) {
 
   if (result.noService) {
     const row = widget.addStack();
-    row.addText("🚌 No Sun service");
+    row.addText(T.noSunService);
   } else if (result.noMoreBus) {
     const row = widget.addStack();
-    row.addText("🚌 No more bus today");
+    row.addText(T.noMoreBus);
   } else {
     const bus = result.buses[0];
     const header = widget.addStack();
@@ -171,7 +200,7 @@ if (config.runsInWidget) {
 
     const main = widget.addStack();
     main.layoutHorizontally();
-    const minsText = main.addText(`~${bus.mins} min`);
+    const minsText = main.addText(`~${bus.mins} ${T.min}`);
     minsText.font = Font.boldSystemFont(26);
     main.addSpacer(4);
     const timeText = main.addText(bus.time);
@@ -189,7 +218,7 @@ if (config.runsInWidget) {
     if (result.buses.length > 1) {
       const next = result.buses[1];
       const nextRow = widget.addStack();
-      const nextLabel = resolvedKey === "asr" ? `Next: ${next.time} → ${next.dest}` : `Next: ${next.time}`;
+      const nextLabel = resolvedKey === "asr" ? `${T.next} ${next.time} → ${next.dest}` : `${T.next} ${next.time}`;
       const nextText = nextRow.addText(nextLabel);
       nextText.font = Font.systemFont(11);
       nextText.textOpacity = 0.5;
@@ -211,23 +240,23 @@ if (config.runsInWidget) {
 
   if (result.noService) {
     const row = new UITableRow();
-    row.addText("No service on Sundays");
+    row.addText(T.noSunServiceDetail);
     table.addRow(row);
   } else if (result.noMoreBus) {
     const row = new UITableRow();
-    row.addText("No more buses today");
+    row.addText(T.noMoreBusDetail);
     table.addRow(row);
   } else {
     for (const bus of result.buses) {
       const row = new UITableRow();
       const label = resolvedKey === "asr" ? `→ ${bus.dest}` : "";
-      row.addText(`${bus.time} (${bus.mins} min) ${label}`);
+      row.addText(`${bus.time} (${bus.mins} ${T.min}) ${label}`);
       table.addRow(row);
     }
   }
 
   const infoRow = new UITableRow();
-  infoRow.addText("Widget param: asr, outram6, outram7, harbourfront", "Set in widget config");
+  infoRow.addText(T.widgetParam, T.setInConfig);
   table.addRow(infoRow);
 
   await table.present();
