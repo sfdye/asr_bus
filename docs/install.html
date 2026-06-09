@@ -30,6 +30,23 @@
     h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
     .subtitle { font-size: 14px; color: rgba(255,255,255,0.6); }
 
+    /* Language toggle */
+    .lang-toggle {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .lang-toggle:hover { background: rgba(255,255,255,0.15); }
+    .card { position: relative; }
+
     /* Widget mockup */
     .widget-preview {
       background: rgba(0, 0, 0, 0.4);
@@ -200,58 +217,60 @@
 </head>
 <body>
   <div class="card">
+    <button class="lang-toggle" id="langToggle" onclick="toggleLang()">中文</button>
+
     <div class="header">
       <div class="emoji-hero">🚌</div>
-      <h1>ASR Bus Widget</h1>
-      <p class="subtitle">Lock screen bus timings for Avenue South Residence</p>
+      <h1 data-en="ASR Bus Widget" data-zh="ASR 班车小组件">ASR Bus Widget</h1>
+      <p class="subtitle" data-en="Lock screen bus timings for Avenue South Residence" data-zh="南峰雅苑班车锁屏小组件">Lock screen bus timings for Avenue South Residence</p>
 
       <div class="widget-preview">
         <div class="widget-header">🚌 ASR</div>
         <div class="widget-main">
-          <span class="widget-mins">~6 min</span>
+          <span class="widget-mins" data-en="~6 min" data-zh="~6 分钟">~6 min</span>
           <span class="widget-time">08:20</span>
         </div>
-        <div class="widget-dest">→ 🚇 Outram Park</div>
-        <div class="widget-next">Next: 08:40 → 🚇 Outram Park</div>
+        <div class="widget-dest" data-en="→ 🚇 Outram Park" data-zh="→ 🚇 欧南园">→ 🚇 Outram Park</div>
+        <div class="widget-next" data-en="Next: 08:40 → 🚇 Outram Park" data-zh="下一班: 08:40 → 🚇 欧南园">Next: 08:40 → 🚇 Outram Park</div>
       </div>
-      <p class="widget-caption">What it looks like on your lock screen</p>
+      <p class="widget-caption" data-en="What it looks like on your lock screen" data-zh="锁屏显示效果">What it looks like on your lock screen</p>
     </div>
 
     <div class="features">
       <div class="feature">
         <div class="icon">🔒</div>
-        <div class="title">Lock Screen</div>
-        Check next bus at a glance without unlocking your phone.
+        <div class="title" data-en="Lock Screen" data-zh="锁屏显示">Lock Screen</div>
+        <span data-en="Check next bus at a glance without unlocking your phone." data-zh="无需解锁手机，一眼查看下一班车。">Check next bus at a glance without unlocking your phone.</span>
       </div>
       <div class="feature">
         <div class="icon">📍</div>
-        <div class="title">Smart Location</div>
-        Auto-detects nearest stop via GPS. Or set a fixed stop if you prefer.
+        <div class="title" data-en="Smart Location" data-zh="智能定位">Smart Location</div>
+        <span data-en="Auto-detects nearest stop via GPS. Or set a fixed stop if you prefer." data-zh="通过 GPS 自动检测最近站点，也可手动设置固定站点。">Auto-detects nearest stop via GPS. Or set a fixed stop if you prefer.</span>
       </div>
       <div class="feature">
         <div class="icon">🌏</div>
-        <div class="title">Multilingual</div>
-        English & Chinese, auto-detected from your device language setting.
+        <div class="title" data-en="Multilingual" data-zh="多语言">Multilingual</div>
+        <span data-en="English & Chinese, auto-detected from your device language setting." data-zh="支持中英文，根据设备语言自动切换。">English & Chinese, auto-detected from your device language setting.</span>
       </div>
       <div class="feature">
         <div class="icon">📶</div>
-        <div class="title">Works Offline</div>
-        Schedule is embedded in the widget — no internet or server needed.
+        <div class="title" data-en="Works Offline" data-zh="离线可用">Works Offline</div>
+        <span data-en="Schedule is embedded in the widget — no internet or server needed." data-zh="时刻表内置于小组件，无需联网。">Schedule is embedded in the widget — no internet or server needed.</span>
       </div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="desktop-msg" id="desktopMsg">
+    <div class="desktop-msg" id="desktopMsg" data-en="Open this page on your iPhone to install." data-zh="请在 iPhone 上打开此页面进行安装。">
       Open this page on your iPhone to install.
     </div>
 
-    <p class="section-label">Install</p>
+    <p class="section-label" data-en="Install" data-zh="安装步骤">Install</p>
 
     <div class="step">
       <div class="step-num">1</div>
       <div class="step-content">
-        <a href="https://apps.apple.com/app/scriptable/id1405459188" class="step-btn" style="background:#007aff;">
+        <a href="https://apps.apple.com/app/scriptable/id1405459188" class="step-btn" style="background:#007aff;" data-en="Get Scriptable (Free)" data-zh="下载 Scriptable（免费）">
           Get Scriptable (Free)
         </a>
       </div>
@@ -260,7 +279,7 @@
     <div class="step">
       <div class="step-num" id="copyNum">2</div>
       <div class="step-content">
-        <button class="step-btn" id="copyBtn" style="background:#30d158;" onclick="copyScript()">
+        <button class="step-btn" id="copyBtn" style="background:#30d158;" onclick="copyScript()" data-en="Copy Widget Script" data-zh="复制小组件脚本">
           Copy Widget Script
         </button>
       </div>
@@ -269,7 +288,7 @@
     <div class="step hidden" id="step3">
       <div class="step-num">3</div>
       <div class="step-content">
-        <a href="scriptable:///add" class="step-btn" style="background:#5856d6;">
+        <a href="scriptable:///add" class="step-btn" style="background:#5856d6;" data-en="Open Scriptable → Paste" data-zh="打开 Scriptable → 粘贴">
           Open Scriptable → Paste
         </a>
       </div>
@@ -278,29 +297,29 @@
     <div class="step">
       <div class="step-num">4</div>
       <div class="step-content">
-        <p class="step-text">Rename the script to <strong>ASR Bus</strong></p>
+        <p class="step-text" data-en="Rename the script to <strong>ASR Bus</strong>" data-zh="将脚本重命名为 <strong>ASR Bus</strong>">Rename the script to <strong>ASR Bus</strong></p>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num">5</div>
       <div class="step-content">
-        <p class="step-text">Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong></p>
+        <p class="step-text" data-en="Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong>" data-zh="开启定位：设置 → 隐私 → 定位服务 → Scriptable → <strong>始终</strong>">Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong></p>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num">6</div>
       <div class="step-content">
-        <p class="step-text">Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong></p>
+        <p class="step-text" data-en="Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong>" data-zh="长按锁屏 → 自定义 → 添加 <strong>Scriptable</strong> 小组件 → 选择 <strong>ASR Bus</strong>">Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong></p>
       </div>
     </div>
 
     <div class="divider"></div>
 
     <div class="params">
-      <p class="params-title">Widget Parameter (optional)</p>
-      <div class="param-row">
+      <p class="params-title" data-en="Widget Parameter (optional)" data-zh="小组件参数（可选）">Widget Parameter (optional)</p>
+      <div class="param-row" data-en="<code>auto</code> or empty — nearest stop via GPS<br><code>asr</code> — Avenue South Residence<br><code>outram6</code> — Outram Park Exit 6<br><code>outram7</code> — Outram Park Exit 7<br><code>harbourfront</code> — Harbourfront Exit D" data-zh="<code>auto</code> 或留空 — 通过 GPS 自动选择最近站点<br><code>asr</code> — 南峰雅苑<br><code>outram6</code> — 欧南园地铁站 6 号口<br><code>outram7</code> — 欧南园地铁站 7 号口<br><code>harbourfront</code> — 港湾地铁站 D 出口">
         <code>auto</code> or empty — nearest stop via GPS<br>
         <code>asr</code> — Avenue South Residence<br>
         <code>outram6</code> — Outram Park Exit 6<br>
@@ -312,23 +331,42 @@
 
   <script>
     var SCRIPT_URL = 'https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/ASR_Bus.js';
+    var currentLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+
+    function setLang(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+      document.getElementById('langToggle').textContent = lang === 'zh' ? 'EN' : '中文';
+      document.querySelectorAll('[data-' + lang + ']').forEach(function(el) {
+        var text = el.getAttribute('data-' + lang);
+        if (el.tagName === 'INPUT' || el.tagName === 'BUTTON') {
+          el.textContent = text;
+        } else {
+          el.innerHTML = text;
+        }
+      });
+    }
+
+    function toggleLang() {
+      setLang(currentLang === 'en' ? 'zh' : 'en');
+    }
 
     async function copyScript() {
       var btn = document.getElementById('copyBtn');
       var copyNum = document.getElementById('copyNum');
       var step3 = document.getElementById('step3');
-      btn.textContent = 'Downloading...';
+      btn.textContent = currentLang === 'zh' ? '下载中...' : 'Downloading...';
       try {
         var res = await fetch(SCRIPT_URL);
         var text = await res.text();
         await navigator.clipboard.writeText(text);
-        btn.textContent = 'Copied!';
+        btn.textContent = currentLang === 'zh' ? '已复制!' : 'Copied!';
         btn.style.background = '#34c759';
         btn.disabled = true;
         copyNum.classList.add('done');
         step3.classList.remove('hidden');
       } catch (e) {
-        btn.textContent = 'Failed — tap to retry';
+        btn.textContent = currentLang === 'zh' ? '失败 — 点击重试' : 'Failed — tap to retry';
         btn.style.background = '#ff453a';
       }
     }
@@ -338,6 +376,7 @@
       if (!isIOS) {
         document.getElementById('desktopMsg').style.display = 'block';
       }
+      setLang(currentLang);
     })();
   </script>
 </body>
