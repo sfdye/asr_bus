@@ -87,13 +87,20 @@
     }
     .feature {
       background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      padding: 12px 10px;
+      border-radius: 12px;
+      padding: 14px 12px;
       font-size: 12px;
-      text-align: center;
-      color: rgba(255,255,255,0.7);
+      text-align: left;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.4;
     }
-    .feature .icon { font-size: 18px; margin-bottom: 4px; }
+    .feature .icon { font-size: 20px; margin-bottom: 6px; }
+    .feature .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 4px;
+    }
     .params {
       margin-top: 20px;
       text-align: left;
@@ -193,19 +200,28 @@
     <div class="features">
       <div class="feature">
         <div class="icon">📍</div>
-        Auto-detects stop
+        <div class="title">Smart Location</div>
+        Auto-detects nearest stop via GPS. Completely optional — you can set a fixed stop instead.
       </div>
       <div class="feature">
-        <div class="icon">⏱️</div>
-        Next bus timing
+        <div class="icon">🔒</div>
+        <div class="title">Lock Screen</div>
+        See next bus at a glance without unlocking your phone.
       </div>
       <div class="feature">
         <div class="icon">🌏</div>
-        English & Chinese
+        <div class="title">Multilingual</div>
+        English & Chinese, auto-detected from your device language.
       </div>
       <div class="feature">
         <div class="icon">📶</div>
-        Works offline
+        <div class="title">Works Offline</div>
+        Schedule is embedded — no internet or server needed.
+      </div>
+      <div class="feature">
+        <div class="icon">⏱️</div>
+        <div class="title">Next Bus</div>
+        Shows minutes until arrival, departure time, and destination.
       </div>
     </div>
 
