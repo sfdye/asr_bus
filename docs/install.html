@@ -24,64 +24,56 @@
       padding: 40px 32px;
       max-width: 400px;
       width: 100%;
-      text-align: center;
     }
-    .emoji-hero { font-size: 56px; margin-bottom: 16px; }
-    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-    .subtitle { font-size: 15px; color: rgba(255,255,255,0.6); margin-bottom: 32px; }
-    .install-btn {
-      display: inline-block;
-      background: #30d158;
-      color: #fff;
-      font-size: 17px;
-      font-weight: 600;
-      padding: 16px 32px;
-      border-radius: 14px;
-      text-decoration: none;
-      transition: transform 0.1s, opacity 0.2s;
-      width: 100%;
-      border: none;
-      cursor: pointer;
-    }
-    .install-btn:active { transform: scale(0.97); opacity: 0.9; }
-    .prereq {
-      margin-top: 16px;
-      font-size: 13px;
-      color: rgba(255,255,255,0.5);
-    }
-    .prereq a { color: rgba(255,255,255,0.7); }
-    .steps {
-      margin-top: 32px;
-      text-align: left;
-      padding: 0;
-      list-style: none;
-      counter-reset: step;
-    }
-    .steps li {
-      counter-increment: step;
-      font-size: 14px;
-      color: rgba(255,255,255,0.7);
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+    .header { text-align: center; margin-bottom: 32px; }
+    .emoji-hero { font-size: 56px; margin-bottom: 12px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: rgba(255,255,255,0.6); }
+    .step {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
+      margin-bottom: 20px;
     }
-    .steps li:last-child { border-bottom: none; }
-    .steps li::before {
-      content: counter(step);
+    .step-num {
       flex-shrink: 0;
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       background: rgba(48, 209, 88, 0.2);
       color: #30d158;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
+      margin-top: 2px;
     }
+    .step-num.done { background: #30d158; color: #fff; }
+    .step-content { flex: 1; }
+    .step-btn {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .step-btn:active { transform: scale(0.97); opacity: 0.9; }
+    .step-text {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.5;
+      padding: 4px 0;
+    }
+    .step-text strong { color: rgba(255,255,255,0.9); }
+    .hidden { display: none; }
     .divider {
       width: 100%;
       height: 1px;
@@ -91,19 +83,39 @@
     .features {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 24px;
+      gap: 10px;
     }
     .feature {
       background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 14px 12px;
-      font-size: 13px;
+      border-radius: 10px;
+      padding: 12px 10px;
+      font-size: 12px;
+      text-align: center;
+      color: rgba(255,255,255,0.7);
     }
-    .feature .icon { font-size: 20px; margin-bottom: 6px; }
-    .feature .label { color: rgba(255,255,255,0.7); }
+    .feature .icon { font-size: 18px; margin-bottom: 4px; }
+    .params {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .params-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 8px;
+    }
+    .param-row {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      line-height: 2;
+    }
+    .param-row code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
     .desktop-msg {
-      display: none;
       background: rgba(255, 204, 0, 0.1);
       border: 1px solid rgba(255, 204, 0, 0.3);
       border-radius: 12px;
@@ -111,80 +123,100 @@
       margin-bottom: 24px;
       font-size: 13px;
       color: rgba(255, 204, 0, 0.9);
-    }
-    .auto-redirect-notice {
-      margin-top: 12px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.4);
+      text-align: center;
       display: none;
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="emoji-hero">🚌</div>
-    <h1>ASR Bus Widget</h1>
-    <p class="subtitle">Lock screen bus timings for Avenue South Residence</p>
+    <div class="header">
+      <div class="emoji-hero">🚌</div>
+      <h1>ASR Bus Widget</h1>
+      <p class="subtitle">Lock screen bus timings for Avenue South Residence</p>
+    </div>
 
     <div class="desktop-msg" id="desktopMsg">
       Open this page on your iPhone to install.
     </div>
 
-    <a href="https://apps.apple.com/app/scriptable/id1405459188" class="install-btn" id="appStoreBtn" style="background:#007aff; margin-bottom:12px;">
-      1. Get Scriptable (Free)
-    </a>
-    <button class="install-btn" id="copyBtn" onclick="copyScript()">
-      2. Copy Script to Clipboard
-    </button>
-    <a href="scriptable:///add" class="install-btn" id="openBtn" style="display:none; margin-top:12px; background:#5856d6;">
-      3. Open Scriptable → Paste
-    </a>
-    <p class="auto-redirect-notice" id="iosHint"></p>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <a href="https://apps.apple.com/app/scriptable/id1405459188" class="step-btn" style="background:#007aff;">
+          Get Scriptable (Free)
+        </a>
+      </div>
+    </div>
 
+    <div class="step">
+      <div class="step-num" id="copyNum">2</div>
+      <div class="step-content">
+        <button class="step-btn" id="copyBtn" style="background:#30d158;" onclick="copyScript()">
+          Copy Widget Script
+        </button>
+      </div>
+    </div>
+
+    <div class="step hidden" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <a href="scriptable:///add" class="step-btn" style="background:#5856d6;">
+          Open Scriptable → Paste
+        </a>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num" id="remainingStart">4</div>
+      <div class="step-content">
+        <p class="step-text">Rename the script to <strong>ASR Bus</strong></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <p class="step-text">Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <p class="step-text">Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong></p>
+      </div>
+    </div>
 
     <div class="divider"></div>
 
     <div class="features">
       <div class="feature">
         <div class="icon">📍</div>
-        <div class="label">Auto-detects nearest stop</div>
+        Auto-detects stop
       </div>
       <div class="feature">
         <div class="icon">⏱️</div>
-        <div class="label">Minutes until next bus</div>
+        Next bus timing
       </div>
       <div class="feature">
         <div class="icon">🌏</div>
-        <div class="label">English & Chinese</div>
+        English & Chinese
       </div>
       <div class="feature">
         <div class="icon">📶</div>
-        <div class="label">Works offline</div>
+        Works offline
       </div>
     </div>
 
-    <div class="divider"></div>
-
-    <ol class="steps">
-      <li>Install <strong>Scriptable</strong> from the App Store (tap button above)</li>
-      <li>Tap <strong>Copy Script</strong> above</li>
-      <li>Tap <strong>Open Scriptable</strong> → Paste into the new script</li>
-      <li>Rename the script to <strong>ASR Bus</strong></li>
-      <li>Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong></li>
-      <li>Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → set to <strong>ASR Bus</strong></li>
-    </ol>
-
-    <div class="divider"></div>
-
-    <div style="text-align:left;">
-      <p style="font-size:14px; font-weight:600; margin-bottom:8px;">Widget Parameter (optional)</p>
-      <p style="font-size:12px; color:rgba(255,255,255,0.6); margin-bottom:8px;">Set in widget config to pin a stop:</p>
-      <div style="font-size:12px; color:rgba(255,255,255,0.5); line-height:1.8;">
-        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">auto</code> or empty — nearest stop via GPS<br>
-        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">asr</code> — Avenue South Residence<br>
-        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">outram6</code> — Outram Park Exit 6<br>
-        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">outram7</code> — Outram Park Exit 7<br>
-        <code style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">harbourfront</code> — Harbourfront Exit D
+    <div class="params">
+      <p class="params-title">Widget Parameter (optional)</p>
+      <div class="param-row">
+        <code>auto</code> or empty — nearest stop via GPS<br>
+        <code>asr</code> — Avenue South Residence<br>
+        <code>outram6</code> — Outram Park Exit 6<br>
+        <code>outram7</code> — Outram Park Exit 7<br>
+        <code>harbourfront</code> — Harbourfront Exit D
       </div>
     </div>
   </div>
@@ -194,8 +226,8 @@
 
     async function copyScript() {
       var btn = document.getElementById('copyBtn');
-      var openBtn = document.getElementById('openBtn');
-      var hint = document.getElementById('iosHint');
+      var copyNum = document.getElementById('copyNum');
+      var step3 = document.getElementById('step3');
       btn.textContent = 'Downloading...';
       try {
         var res = await fetch(SCRIPT_URL);
@@ -203,23 +235,19 @@
         await navigator.clipboard.writeText(text);
         btn.textContent = 'Copied!';
         btn.style.background = '#34c759';
-        openBtn.style.display = 'inline-block';
-        hint.style.display = 'block';
-        hint.textContent = 'Now tap below to open Scriptable and paste the script.';
+        btn.disabled = true;
+        copyNum.classList.add('done');
+        step3.classList.remove('hidden');
       } catch (e) {
         btn.textContent = 'Failed — tap to retry';
         btn.style.background = '#ff453a';
-        hint.style.display = 'block';
-        hint.innerHTML = 'Copy failed. <a href="' + SCRIPT_URL + '" style="color:#fff;text-decoration:underline;">Open script manually</a> and copy-paste.';
       }
     }
 
     (function() {
       var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-      var msg = document.getElementById('desktopMsg');
-
       if (!isIOS) {
-        msg.style.display = 'block';
+        document.getElementById('desktopMsg').style.display = 'block';
       }
     })();
   </script>
