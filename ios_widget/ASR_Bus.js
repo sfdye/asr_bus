@@ -12,6 +12,7 @@ const STRINGS = {
     noSunServiceDetail: "No service on Sundays",
     noMoreBusDetail: "No more buses today",
     min: "min",
+    inHrs: "in ~%s hrs",
     next: "Next:",
     widgetParam: "Widget param: asr, outram6, outram7, harbourfront",
     setInConfig: "Set in widget config",
@@ -22,6 +23,7 @@ const STRINGS = {
     noSunServiceDetail: "周日无班车服务",
     noMoreBusDetail: "今日已无班车",
     min: "分钟",
+    inHrs: "约%s小时后",
     next: "下一班:",
     widgetParam: "参数: asr, outram6, outram7, harbourfront",
     setInConfig: "在小组件配置中设置",
@@ -200,12 +202,22 @@ if (config.runsInWidget) {
 
     const main = widget.addStack();
     main.layoutHorizontally();
-    const minsText = main.addText(`~${bus.mins} ${T.min}`);
-    minsText.font = Font.boldSystemFont(26);
-    main.addSpacer(4);
-    const timeText = main.addText(bus.time);
-    timeText.font = Font.systemFont(14);
-    timeText.textOpacity = 0.7;
+    if (bus.mins <= 60) {
+      const minsText = main.addText(`~${bus.mins} ${T.min}`);
+      minsText.font = Font.boldSystemFont(26);
+      main.addSpacer(4);
+      const timeText = main.addText(bus.time);
+      timeText.font = Font.systemFont(14);
+      timeText.textOpacity = 0.7;
+    } else {
+      const timeText = main.addText(bus.time);
+      timeText.font = Font.boldSystemFont(26);
+      main.addSpacer(4);
+      const hrs = (bus.mins / 60).toFixed(1).replace(/\.0$/, "");
+      const hrsText = main.addText(T.inHrs.replace("%s", hrs));
+      hrsText.font = Font.systemFont(12);
+      hrsText.textOpacity = 0.5;
+    }
 
     widget.addSpacer(2);
 
@@ -250,7 +262,10 @@ if (config.runsInWidget) {
     for (const bus of result.buses) {
       const row = new UITableRow();
       const label = resolvedKey === "asr" ? `→ ${bus.dest}` : "";
-      row.addText(`${bus.time} (${bus.mins} ${T.min}) ${label}`);
+      const duration = bus.mins <= 60
+        ? `${bus.mins} ${T.min}`
+        : T.inHrs.replace("%s", (bus.mins / 60).toFixed(1).replace(/\.0$/, ""));
+      row.addText(`${bus.time} (${duration}) ${label}`);
       table.addRow(row);
     }
   }
