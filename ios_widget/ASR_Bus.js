@@ -14,6 +14,7 @@ const STRINGS = {
     min: "min",
     inHrs: "in ~%s hrs",
     next: "Next:",
+    updated: "Last update at %s",
     widgetParam: "Widget param: asr, outram6, outram7, harbourfront",
     setInConfig: "Set in widget config",
   },
@@ -25,6 +26,7 @@ const STRINGS = {
     min: "分钟",
     inHrs: "约%s小时后",
     next: "下一班:",
+    updated: "最后更新 %s",
     widgetParam: "参数: asr, outram6, outram7, harbourfront",
     setInConfig: "在小组件配置中设置",
   },
@@ -197,13 +199,18 @@ if (config.runsInWidget) {
     header.layoutHorizontally();
     const icon = header.addText(`🚌 ${stop.name}`);
     icon.font = Font.boldSystemFont(12);
+    header.addSpacer();
+    const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const updatedText = header.addText(T.updated.replace("%s", timeStr));
+    updatedText.font = Font.systemFont(9);
+    updatedText.textOpacity = 0.4;
 
     widget.addSpacer(2);
 
     const main = widget.addStack();
     main.layoutHorizontally();
     if (bus.mins <= 60) {
-      const minsText = main.addText(`~${bus.mins} ${T.min}`);
+      const minsText = main.addText(`${bus.mins} ${T.min}`);
       minsText.font = Font.boldSystemFont(26);
       main.addSpacer(4);
       const timeText = main.addText(bus.time);
