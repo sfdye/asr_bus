@@ -70,13 +70,6 @@ const SATURDAY_TRIPS = [
 const HOLIDAYS_URL = "https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/holidays.json";
 const HOLIDAYS_CACHE_KEY = "asr_bus_holidays";
 
-const FALLBACK_HOLIDAYS = [
-  "2026-01-01", "2026-02-17", "2026-02-18", "2026-03-21",
-  "2026-04-03", "2026-05-01", "2026-05-27", "2026-05-31",
-  "2026-06-01", "2026-08-09", "2026-08-10", "2026-11-08",
-  "2026-11-09", "2026-12-25",
-];
-
 async function loadHolidays() {
   const fm = FileManager.local();
   const cachePath = fm.joinPath(fm.documentsDirectory(), HOLIDAYS_CACHE_KEY + ".json");
@@ -98,12 +91,10 @@ async function loadHolidays() {
 }
 
 function isHoliday(date, holidays) {
+  if (!holidays) return false;
   const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const year = String(date.getFullYear());
-  if (holidays && holidays[year]) {
-    return holidays[year].includes(dateStr);
-  }
-  return FALLBACK_HOLIDAYS.includes(dateStr);
+  return holidays[year] ? holidays[year].includes(dateStr) : false;
 }
 
 function getSGTime() {
