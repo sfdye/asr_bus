@@ -1,0 +1,28 @@
+name: Update holidays
+
+on:
+  schedule:
+    - cron: "0 0 1 12 *"  # Dec 1st each year
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install holidays
+
+      - run: python generate_holidays.py
+
+      - name: Create PR if changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: update holidays.json for next year"
+          title: "Update public holidays for next year"
+          body: "Auto-generated from the `holidays` Python package. Please review for accuracy before merging."
+          branch: chore/update-holidays

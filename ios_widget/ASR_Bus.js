@@ -67,13 +67,35 @@ const SATURDAY_TRIPS = [
   ["19:00", "A"], ["19:30", "B"], ["20:00", "A"], ["20:30", "B"],
 ];
 
-// Singapore public holidays 2025
-const SG_HOLIDAYS = [
-  "2025-01-01", "2025-01-29", "2025-01-30", "2025-03-31",
-  "2025-04-18", "2025-05-01", "2025-05-12", "2025-06-06",
-  "2025-06-07", "2025-08-09", "2025-10-20", "2025-11-01",
-  "2025-12-25",
-];
+const HOLIDAYS_URL = "https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/holidays.json";
+const HOLIDAYS_CACHE_KEY = "asr_bus_holidays";
+
+async function loadHolidays() {
+  const fm = FileManager.local();
+  const cachePath = fm.joinPath(fm.documentsDirectory(), HOLIDAYS_CACHE_KEY + ".json");
+
+  try {
+    const req = new Request(HOLIDAYS_URL);
+    req.timeoutInterval = 5;
+    const json = await req.loadJSON();
+    fm.writeString(cachePath, JSON.stringify(json));
+    return json;
+  } catch {
+    try {
+      if (fm.fileExists(cachePath)) {
+        return JSON.parse(fm.readString(cachePath));
+      }
+    } catch {}
+  }
+  return null;
+}
+
+function isHoliday(date, holidays) {
+  if (!holidays) return false;
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const year = String(date.getFullYear());
+  return holidays[year] ? holidays[year].includes(dateStr) : false;
+}
 
 function getSGTime() {
   const now = new Date();
@@ -82,15 +104,10 @@ function getSGTime() {
   return new Date(utcMs + sgOffset * 60000);
 }
 
-function isHoliday(date) {
-  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  return SG_HOLIDAYS.includes(dateStr);
-}
-
-function getDayType(date) {
+function getDayType(date, holidays) {
   const day = date.getDay();
   if (day === 0) return "sunday";
-  if (day === 6 || isHoliday(date)) return "saturday";
+  if (day === 6 || isHoliday(date, holidays)) return "saturday";
   return "weekday";
 }
 
@@ -112,8 +129,8 @@ function addMinutes(timeStr, mins) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function getNextBuses(stopKey, now) {
-  const dayType = getDayType(now);
+function getNextBuses(stopKey, now, holidays) {
+  const dayType = getDayType(now, holidays);
   const trips = getTrips(dayType);
   if (!trips) return { noService: true };
 
@@ -179,9 +196,10 @@ async function resolveStop() {
 
 // Widget rendering
 const resolvedKey = await resolveStop();
+const holidays = await loadHolidays();
 const stop = STOPS[resolvedKey];
 const now = getSGTime();
-const result = getNextBuses(resolvedKey, now);
+const result = getNextBuses(resolvedKey, now, holidays);
 
 if (config.runsInWidget) {
   const widget = new ListWidget();
