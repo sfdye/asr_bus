@@ -78,12 +78,12 @@ async function loadHolidays() {
     const json = await req.loadJSON();
     fm.writeString(cachePath, JSON.stringify(json));
     return json;
-  } catch {
+  } catch (e) {
     try {
       if (fm.fileExists(cachePath)) {
         return JSON.parse(fm.readString(cachePath));
       }
-    } catch {}
+    } catch (e) {}
   }
   return null;
 }
@@ -185,7 +185,7 @@ async function resolveStop() {
       Location.setAccuracyToHundredMeters();
       const loc = await Location.current();
       return nearestStop(loc.latitude, loc.longitude);
-    } catch {
+    } catch (e) {
       return "asr";
     }
   }
