@@ -338,7 +338,10 @@
 
   <script>
     var SCRIPT_URL = 'https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/ASR_Bus.js';
+    var cachedScript = null;
     var currentLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+
+    fetch(SCRIPT_URL).then(function(r) { return r.text(); }).then(function(t) { cachedScript = t; });
 
     function setLang(lang) {
       currentLang = lang;
@@ -358,23 +361,45 @@
       setLang(currentLang === 'en' ? 'zh' : 'en');
     }
 
-    async function copyScript() {
+    function copyToClipboard(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    function onCopySuccess() {
       var btn = document.getElementById('copyBtn');
       var copyNum = document.getElementById('copyNum');
       var step3 = document.getElementById('step3');
-      btn.textContent = currentLang === 'zh' ? '下载中...' : 'Downloading...';
-      try {
-        var res = await fetch(SCRIPT_URL);
-        var text = await res.text();
-        await navigator.clipboard.writeText(text);
-        btn.textContent = currentLang === 'zh' ? '已复制!' : 'Copied!';
-        btn.style.background = '#34c759';
-        btn.disabled = true;
-        copyNum.classList.add('done');
-        step3.classList.remove('hidden');
-      } catch (e) {
-        btn.textContent = currentLang === 'zh' ? '失败 — 点击重试' : 'Failed — tap to retry';
-        btn.style.background = '#ff453a';
+      btn.textContent = currentLang === 'zh' ? '已复制!' : 'Copied!';
+      btn.style.background = '#34c759';
+      btn.disabled = true;
+      copyNum.classList.add('done');
+      step3.classList.remove('hidden');
+    }
+
+    async function copyScript() {
+      var btn = document.getElementById('copyBtn');
+      if (cachedScript) {
+        copyToClipboard(cachedScript);
+        onCopySuccess();
+      } else {
+        btn.textContent = currentLang === 'zh' ? '下载中...' : 'Downloading...';
+        try {
+          var res = await fetch(SCRIPT_URL);
+          cachedScript = await res.text();
+          copyToClipboard(cachedScript);
+          onCopySuccess();
+        } catch (e) {
+          btn.textContent = currentLang === 'zh' ? '失败 — 点击重试' : 'Failed — tap to retry';
+          btn.style.background = '#ff453a';
+        }
       }
     }
 
