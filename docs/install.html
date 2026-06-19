@@ -213,6 +213,17 @@
       text-align: center;
       display: none;
     }
+    .info-note {
+      background: rgba(100, 160, 255, 0.08);
+      border: 1px solid rgba(100, 160, 255, 0.25);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 20px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+    .info-note strong { color: rgba(255, 255, 255, 0.85); }
   </style>
 </head>
 <body>
@@ -333,6 +344,10 @@
         <code>outram7</code> — Outram Park Exit 7<br>
         <code>harbourfront</code> — Harbourfront Exit D
       </div>
+    </div>
+
+    <div class="info-note" data-en="<strong>Note:</strong> The minutes countdown may sometimes appear stale on the lock screen. This is an iOS limitation — widgets refresh on a system-managed schedule and cannot update in real time. Tap the widget to get the latest timing." data-zh="<strong>注意：</strong>锁屏上的倒计时分钟数有时可能不会即时更新。这是 iOS 的系统限制——小组件按系统管理的时间表刷新，无法实时更新。点击小组件即可获取最新时间。">
+      <strong>Note:</strong> The minutes countdown may sometimes appear stale on the lock screen. This is an iOS limitation — widgets refresh on a system-managed schedule and cannot update in real time. Tap the widget to get the latest timing.
     </div>
   </div>
 
