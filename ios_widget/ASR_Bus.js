@@ -200,49 +200,55 @@ const now = getSGTime();
 const result = getNextBuses(resolvedKey, now, holidays);
 
 if (config.runsInWidget) {
+  const family = config.widgetFamily;
+  const scale = family === "large" ? 1.8 : family === "medium" ? 1.4 : 1;
+  const sz = (base) => Math.round(base * scale);
+
   const widget = new ListWidget();
   widget.setPadding(0, 0, 0, 0);
 
   if (result.noService) {
     const row = widget.addStack();
-    row.addText(T.noSunService);
+    const t = row.addText(T.noSunService);
+    t.font = Font.systemFont(sz(12));
   } else if (result.noMoreBus) {
     const row = widget.addStack();
-    row.addText(T.noMoreBus);
+    const t = row.addText(T.noMoreBus);
+    t.font = Font.systemFont(sz(12));
   } else {
     const bus = result.buses[0];
     const header = widget.addStack();
     header.layoutHorizontally();
     const icon = header.addText(`🚌 ${stop.name}`);
-    icon.font = Font.boldSystemFont(12);
+    icon.font = Font.boldSystemFont(sz(12));
 
-    widget.addSpacer(2);
+    widget.addSpacer(sz(2));
 
     const main = widget.addStack();
     main.layoutHorizontally();
     if (bus.mins <= 60) {
       const minsText = main.addText(`~${bus.mins} ${T.min}`);
-      minsText.font = Font.boldSystemFont(26);
-      main.addSpacer(4);
+      minsText.font = Font.boldSystemFont(sz(26));
+      main.addSpacer(sz(4));
       const timeText = main.addText(bus.time);
-      timeText.font = Font.systemFont(14);
+      timeText.font = Font.systemFont(sz(14));
       timeText.textOpacity = 0.7;
     } else {
       const timeText = main.addText(bus.time);
-      timeText.font = Font.boldSystemFont(26);
-      main.addSpacer(4);
+      timeText.font = Font.boldSystemFont(sz(26));
+      main.addSpacer(sz(4));
       const hrs = (bus.mins / 60).toFixed(1).replace(/\.0$/, "");
       const hrsText = main.addText(T.inHrs.replace("%s", hrs));
-      hrsText.font = Font.systemFont(12);
+      hrsText.font = Font.systemFont(sz(12));
       hrsText.textOpacity = 0.5;
     }
 
-    widget.addSpacer(2);
+    widget.addSpacer(sz(2));
 
     const dest = widget.addStack();
     const destLabel = resolvedKey === "asr" ? `→ ${bus.dest}` : "→ 🏠 ASR";
     const destText = dest.addText(destLabel);
-    destText.font = Font.systemFont(11);
+    destText.font = Font.systemFont(sz(11));
     destText.textOpacity = 0.7;
 
     if (result.buses.length > 1) {
@@ -250,7 +256,7 @@ if (config.runsInWidget) {
       const nextRow = widget.addStack();
       const nextLabel = resolvedKey === "asr" ? `${T.next} ${next.time} → ${next.dest}` : `${T.next} ${next.time}`;
       const nextText = nextRow.addText(nextLabel);
-      nextText.font = Font.systemFont(11);
+      nextText.font = Font.systemFont(sz(11));
       nextText.textOpacity = 0.5;
     }
   }
