@@ -208,13 +208,23 @@ if (config.runsInWidget) {
   widget.setPadding(0, 0, 0, 0);
 
   if (result.noService) {
+    widget.addSpacer();
     const row = widget.addStack();
+    row.addSpacer();
     const t = row.addText(T.noSunService);
-    t.font = Font.systemFont(sz(12));
+    t.font = Font.systemFont(sz(16));
+    t.centerAlignText();
+    row.addSpacer();
+    widget.addSpacer();
   } else if (result.noMoreBus) {
+    widget.addSpacer();
     const row = widget.addStack();
+    row.addSpacer();
     const t = row.addText(T.noMoreBus);
-    t.font = Font.systemFont(sz(12));
+    t.font = Font.systemFont(sz(16));
+    t.centerAlignText();
+    row.addSpacer();
+    widget.addSpacer();
   } else {
     const bus = result.buses[0];
     const header = widget.addStack();
