@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -66,7 +64,7 @@ fun ScheduleScreen(modifier: Modifier = Modifier) {
     val dayType = remember { getDayType(now, null) }
     val selectedStop = remember { mutableStateOf("asr") }
 
-    val stopKeys = listOf("asr", "outram6", "outram7", "harbourfront")
+    val stopKeys = BusSchedule.STOPS.keys.toList()
     val result = remember(selectedStop.value) {
         ScheduleCalculator.getNextBuses(selectedStop.value, now, null, locale)
     }

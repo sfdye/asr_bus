@@ -64,7 +64,7 @@ class WidgetConfigureActivity : ComponentActivity() {
                         textScale = textScale.floatValue,
                         onStopSelected = { selectedStop.value = it },
                         onTextScaleChanged = { textScale.floatValue = it },
-                        onConfirm = { onConfirmClicked() }
+                        onConfirm = { confirmSelection() }
                     )
                 }
             }
@@ -75,10 +75,6 @@ class WidgetConfigureActivity : ComponentActivity() {
         super.onSaveInstanceState(outState)
         outState.putString("selectedStop", selectedStop.value)
         outState.putFloat("textScale", textScale.floatValue)
-    }
-
-    private fun onConfirmClicked() {
-        confirmSelection()
     }
 
     private fun confirmSelection() {

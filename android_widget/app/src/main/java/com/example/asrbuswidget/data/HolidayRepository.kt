@@ -10,8 +10,13 @@ class HolidayRepository(private val context: Context) {
 
     private val url = "https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/holidays.json"
     private val cacheFileName = "holidays_cache.json"
+    private val cacheMaxAgeMs = 24 * 60 * 60 * 1000L
 
     fun getHolidays(): Map<String, List<String>>? {
+        val cacheFile = File(context.filesDir, cacheFileName)
+        if (cacheFile.exists() && System.currentTimeMillis() - cacheFile.lastModified() < cacheMaxAgeMs) {
+            return loadFromCache()
+        }
         return try {
             val json = fetchFromNetwork()
             saveToCache(json)
@@ -49,15 +54,9 @@ class HolidayRepository(private val context: Context) {
 
     private fun parseHolidays(json: String): Map<String, List<String>> {
         val obj = JSONObject(json)
-        val result = mutableMapOf<String, List<String>>()
-        for (year in obj.keys()) {
+        return obj.keys().asSequence().associate { year ->
             val array = obj.getJSONArray(year)
-            val dates = mutableListOf<String>()
-            for (i in 0 until array.length()) {
-                dates.add(array.getString(i))
-            }
-            result[year] = dates
+            year to (0 until array.length()).map { array.getString(it) }
         }
-        return result
     }
 }
