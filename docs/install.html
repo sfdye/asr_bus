@@ -24,6 +24,7 @@
       padding: 40px 32px;
       max-width: 400px;
       width: 100%;
+      position: relative;
     }
     .header { text-align: center; margin-bottom: 24px; }
     .emoji-hero { font-size: 56px; margin-bottom: 12px; }
@@ -45,7 +46,38 @@
       transition: background 0.2s;
     }
     .lang-toggle:hover { background: rgba(255,255,255,0.15); }
-    .card { position: relative; }
+
+    /* Platform tabs */
+    .platform-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .platform-tab {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .platform-tab.active {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+    .platform-tab:hover:not(.active) {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .platform-content { display: none; }
+    .platform-content.active { display: block; }
 
     /* Widget mockup */
     .widget-preview {
@@ -155,6 +187,7 @@
       margin-top: 2px;
     }
     .step-num.done { background: #30d158; color: #fff; }
+    .step-num.android { background: rgba(61, 220, 132, 0.2); color: #3ddc84; }
     .step-content { flex: 1; }
     .step-btn {
       display: block;
@@ -233,7 +266,7 @@
     <div class="header">
       <div class="emoji-hero">🚌</div>
       <h1 data-en="ASR Bus Widget" data-zh="ASR 班车小组件">ASR Bus Widget</h1>
-      <p class="subtitle" data-en="Lock screen bus timings for Avenue South Residence" data-zh="南峰雅苑班车锁屏小组件">Lock screen bus timings for Avenue South Residence</p>
+      <p class="subtitle" data-en="Bus timings on your home screen" data-zh="班车时刻直达主屏幕">Bus timings on your home screen</p>
 
       <div class="widget-preview">
         <div class="widget-header">🚌 ASR</div>
@@ -244,110 +277,160 @@
         <div class="widget-dest" data-en="→ 🚇 Outram Park" data-zh="→ 🚇 欧南园">→ 🚇 Outram Park</div>
         <div class="widget-next" data-en="Next: 08:40 → 🚇 Outram Park" data-zh="下一班: 08:40 → 🚇 欧南园">Next: 08:40 → 🚇 Outram Park</div>
       </div>
-      <p class="widget-caption" data-en="What it looks like on your lock screen" data-zh="锁屏显示效果">What it looks like on your lock screen</p>
+      <p class="widget-caption" data-en="What it looks like on your screen" data-zh="小组件显示效果">What it looks like on your screen</p>
     </div>
 
     <div class="features">
       <div class="feature">
-        <div class="icon">🔒</div>
-        <div class="title" data-en="Lock Screen" data-zh="锁屏显示">Lock Screen</div>
-        <span data-en="Check next bus at a glance without unlocking your phone." data-zh="无需解锁手机，一眼查看下一班车。">Check next bus at a glance without unlocking your phone.</span>
-      </div>
-      <div class="feature">
         <div class="icon">📍</div>
         <div class="title" data-en="Smart Location" data-zh="智能定位">Smart Location</div>
-        <span data-en="Auto-detects nearest stop via GPS. Or set a fixed stop if you prefer." data-zh="通过 GPS 自动检测最近站点，也可手动设置固定站点。">Auto-detects nearest stop via GPS. Or set a fixed stop if you prefer.</span>
-      </div>
-      <div class="feature">
-        <div class="icon">🌏</div>
-        <div class="title" data-en="Multilingual" data-zh="多语言">Multilingual</div>
-        <span data-en="English & Chinese, auto-detected from your device language setting." data-zh="支持中英文，根据设备语言自动切换。">English & Chinese, auto-detected from your device language setting.</span>
+        <span data-en="Auto-detects nearest stop via GPS." data-zh="通过 GPS 自动检测最近站点。">Auto-detects nearest stop via GPS.</span>
       </div>
       <div class="feature">
         <div class="icon">📶</div>
         <div class="title" data-en="Works Offline" data-zh="离线可用">Works Offline</div>
-        <span data-en="Schedule is embedded in the widget — no internet or server needed." data-zh="时刻表内置于小组件，无需联网。">Schedule is embedded in the widget — no internet or server needed.</span>
+        <span data-en="Schedule is embedded — no internet needed." data-zh="时刻表内置，无需联网。">Schedule is embedded — no internet needed.</span>
+      </div>
+      <div class="feature">
+        <div class="icon">🌏</div>
+        <div class="title" data-en="Multilingual" data-zh="多语言">Multilingual</div>
+        <span data-en="English & Chinese, auto-detected." data-zh="中英文自动切换。">English & Chinese, auto-detected.</span>
+      </div>
+      <div class="feature">
+        <div class="icon">🔄</div>
+        <div class="title" data-en="Auto Refresh" data-zh="自动刷新">Auto Refresh</div>
+        <span data-en="Updates every few minutes automatically." data-zh="每隔几分钟自动更新。">Updates every few minutes automatically.</span>
       </div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="desktop-msg" id="desktopMsg" data-en="Open this page on your iPhone to install." data-zh="请在 iPhone 上打开此页面进行安装。">
-      Open this page on your iPhone to install.
+    <!-- Platform tabs -->
+    <div class="platform-tabs">
+      <button class="platform-tab" id="tabIos" onclick="switchPlatform('ios')">🍎 iPhone</button>
+      <button class="platform-tab" id="tabAndroid" onclick="switchPlatform('android')">🤖 Android</button>
     </div>
 
-    <p class="section-label" data-en="Install" data-zh="安装步骤">Install</p>
+    <div class="desktop-msg" id="desktopMsg" data-en="Open this page on your phone to install." data-zh="请在手机上打开此页面进行安装。">
+      Open this page on your phone to install.
+    </div>
 
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-content">
-        <a href="https://apps.apple.com/app/scriptable/id1405459188" class="step-btn" style="background:#007aff;" data-en="Get Scriptable (Free)" data-zh="下载 Scriptable（免费）">
-          Get Scriptable (Free)
-        </a>
+    <!-- iOS instructions -->
+    <div class="platform-content" id="contentIos">
+      <p class="section-label" data-en="Install (iPhone)" data-zh="安装步骤 (iPhone)">Install (iPhone)</p>
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <a href="https://apps.apple.com/app/scriptable/id1405459188" class="step-btn" style="background:#007aff;" data-en="Get Scriptable (Free)" data-zh="下载 Scriptable（免费）">
+            Get Scriptable (Free)
+          </a>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num" id="copyNum">2</div>
+        <div class="step-content">
+          <button class="step-btn" id="copyBtn" style="background:#30d158;" onclick="copyScript()" data-en="Copy Widget Script" data-zh="复制小组件脚本">
+            Copy Widget Script
+          </button>
+        </div>
+      </div>
+
+      <div class="step hidden" id="step3">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <a href="scriptable:///add" class="step-btn" style="background:#5856d6;" data-en="Open Scriptable → Paste" data-zh="打开 Scriptable → 粘贴">
+            Open Scriptable → Paste
+          </a>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <p class="step-text" data-en="Rename the script to <strong>ASR Bus</strong>" data-zh="将脚本重命名为 <strong>ASR Bus</strong>">Rename the script to <strong>ASR Bus</strong></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <p class="step-text" data-en="Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong>" data-zh="开启定位：设置 → 隐私 → 定位服务 → Scriptable → <strong>始终</strong>">Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <p class="step-text" data-en="Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong>" data-zh="长按锁屏 → 自定义 → 添加 <strong>Scriptable</strong> 小组件 → 选择 <strong>ASR Bus</strong>">Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-content">
+          <p class="step-text" data-en="Tap the widget → set <strong>When Interacting</strong> to <strong>Run Script</strong>" data-zh="点击小组件 → 将<strong>互动时</strong>设为<strong>运行脚本</strong>">Tap the widget → set <strong>When Interacting</strong> to <strong>Run Script</strong></p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="params">
+        <p class="params-title" data-en="Widget Parameter (optional)" data-zh="小组件参数（可选）">Widget Parameter (optional)</p>
+        <div class="param-row" data-en="<code>auto</code> or empty — nearest stop via GPS<br><code>asr</code> — Avenue South Residence<br><code>outram6</code> — Outram Park Exit 6<br><code>outram7</code> — Outram Park Exit 7<br><code>harbourfront</code> — Harbourfront Exit D" data-zh="<code>auto</code> 或留空 — 通过 GPS 自动选择最近站点<br><code>asr</code> — 南峰雅苑<br><code>outram6</code> — 欧南园地铁站 6 号口<br><code>outram7</code> — 欧南园地铁站 7 号口<br><code>harbourfront</code> — 港湾地铁站 D 出口">
+          <code>auto</code> or empty — nearest stop via GPS<br>
+          <code>asr</code> — Avenue South Residence<br>
+          <code>outram6</code> — Outram Park Exit 6<br>
+          <code>outram7</code> — Outram Park Exit 7<br>
+          <code>harbourfront</code> — Harbourfront Exit D
+        </div>
+      </div>
+
+      <div class="info-note" data-en="<strong>Note:</strong> The minutes countdown may sometimes appear stale on the lock screen. This is an iOS limitation — widgets refresh on a system-managed schedule. Tap the widget to get the latest timing." data-zh="<strong>注意：</strong>锁屏上的倒计时分钟数有时可能不会即时更新。这是 iOS 的系统限制。点击小组件即可获取最新时间。">
+        <strong>Note:</strong> The minutes countdown may sometimes appear stale on the lock screen. This is an iOS limitation — widgets refresh on a system-managed schedule. Tap the widget to get the latest timing.
       </div>
     </div>
 
-    <div class="step">
-      <div class="step-num" id="copyNum">2</div>
-      <div class="step-content">
-        <button class="step-btn" id="copyBtn" style="background:#30d158;" onclick="copyScript()" data-en="Copy Widget Script" data-zh="复制小组件脚本">
-          Copy Widget Script
-        </button>
+    <!-- Android instructions -->
+    <div class="platform-content" id="contentAndroid">
+      <p class="section-label" data-en="Install (Android)" data-zh="安装步骤 (Android)">Install (Android)</p>
+
+      <div class="step">
+        <div class="step-num android">1</div>
+        <div class="step-content">
+          <a href="https://github.com/sfdye/asr_bus/releases/latest/download/ASR-Bus-Widget.apk" class="step-btn" style="background:#3ddc84;" data-en="Download APK" data-zh="下载 APK">
+            Download APK
+          </a>
+        </div>
       </div>
-    </div>
 
-    <div class="step hidden" id="step3">
-      <div class="step-num">3</div>
-      <div class="step-content">
-        <a href="scriptable:///add" class="step-btn" style="background:#5856d6;" data-en="Open Scriptable → Paste" data-zh="打开 Scriptable → 粘贴">
-          Open Scriptable → Paste
-        </a>
+      <div class="step">
+        <div class="step-num android">2</div>
+        <div class="step-content">
+          <p class="step-text"
+            data-en='Open the downloaded file and tap <strong>Install</strong>. If prompted, tap <strong>Settings</strong> and enable <em>Allow from this source</em>.'
+            data-zh='打开下载的文件，点击<strong>安装</strong>。如有提示，点击<strong>设置</strong>并启用<em>允许来自此来源的应用</em>。'>Open the downloaded file and tap <strong>Install</strong>. If prompted, tap <strong>Settings</strong> and enable <em>Allow from this source</em>.</p>
+        </div>
       </div>
-    </div>
 
-    <div class="step">
-      <div class="step-num">4</div>
-      <div class="step-content">
-        <p class="step-text" data-en="Rename the script to <strong>ASR Bus</strong>" data-zh="将脚本重命名为 <strong>ASR Bus</strong>">Rename the script to <strong>ASR Bus</strong></p>
+      <div class="step">
+        <div class="step-num android">3</div>
+        <div class="step-content">
+          <p class="step-text" data-en="Long-press home screen → <strong>Widgets</strong> → find <strong>ASR Bus Widget</strong> → drag to home screen" data-zh="长按主屏幕 → <strong>小组件</strong> → 找到 <strong>ASR Bus Widget</strong> → 拖到主屏幕">Long-press home screen → <strong>Widgets</strong> → find <strong>ASR Bus Widget</strong> → drag to home screen</p>
+        </div>
       </div>
-    </div>
 
-    <div class="step">
-      <div class="step-num">5</div>
-      <div class="step-content">
-        <p class="step-text" data-en="Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong>" data-zh="开启定位：设置 → 隐私 → 定位服务 → Scriptable → <strong>始终</strong>">Allow location: Settings → Privacy → Location → Scriptable → <strong>Always</strong></p>
+      <div class="step">
+        <div class="step-num android">4</div>
+        <div class="step-content">
+          <p class="step-text" data-en="Choose your stop (or <strong>Auto GPS</strong>) → tap <strong>Confirm</strong>" data-zh="选择站点（或选 <strong>自动定位 GPS</strong>）→ 点击<strong>确认</strong>">Choose your stop (or <strong>Auto GPS</strong>) → tap <strong>Confirm</strong></p>
+        </div>
       </div>
-    </div>
 
-    <div class="step">
-      <div class="step-num">6</div>
-      <div class="step-content">
-        <p class="step-text" data-en="Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong>" data-zh="长按锁屏 → 自定义 → 添加 <strong>Scriptable</strong> 小组件 → 选择 <strong>ASR Bus</strong>">Long-press lock screen → Customize → Add <strong>Scriptable</strong> widget → select <strong>ASR Bus</strong></p>
+      <div class="info-note" data-en="<strong>Tip:</strong> Tap the widget anytime to refresh. Long-press the widget to change your stop. For GPS auto-detect, open the app once and grant location permission." data-zh="<strong>提示：</strong>随时点击小组件刷新。长按小组件可更改站点。如需 GPS 自动定位，请先打开应用并授予定位权限。">
+        <strong>Tip:</strong> Tap the widget anytime to refresh. Long-press the widget to change your stop. For GPS auto-detect, open the app once and grant location permission.
       </div>
-    </div>
-
-    <div class="step">
-      <div class="step-num">7</div>
-      <div class="step-content">
-        <p class="step-text" data-en="Tap the widget → set <strong>When Interacting</strong> to <strong>Run Script</strong>" data-zh="点击小组件 → 将<strong>互动时</strong>设为<strong>运行脚本</strong>">Tap the widget → set <strong>When Interacting</strong> to <strong>Run Script</strong></p>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="params">
-      <p class="params-title" data-en="Widget Parameter (optional)" data-zh="小组件参数（可选）">Widget Parameter (optional)</p>
-      <div class="param-row" data-en="<code>auto</code> or empty — nearest stop via GPS<br><code>asr</code> — Avenue South Residence<br><code>outram6</code> — Outram Park Exit 6<br><code>outram7</code> — Outram Park Exit 7<br><code>harbourfront</code> — Harbourfront Exit D" data-zh="<code>auto</code> 或留空 — 通过 GPS 自动选择最近站点<br><code>asr</code> — 南峰雅苑<br><code>outram6</code> — 欧南园地铁站 6 号口<br><code>outram7</code> — 欧南园地铁站 7 号口<br><code>harbourfront</code> — 港湾地铁站 D 出口">
-        <code>auto</code> or empty — nearest stop via GPS<br>
-        <code>asr</code> — Avenue South Residence<br>
-        <code>outram6</code> — Outram Park Exit 6<br>
-        <code>outram7</code> — Outram Park Exit 7<br>
-        <code>harbourfront</code> — Harbourfront Exit D
-      </div>
-    </div>
-
-    <div class="info-note" data-en="<strong>Note:</strong> The minutes countdown may sometimes appear stale on the lock screen. This is an iOS limitation — widgets refresh on a system-managed schedule and cannot update in real time. Tap the widget to get the latest timing." data-zh="<strong>注意：</strong>锁屏上的倒计时分钟数有时可能不会即时更新。这是 iOS 的系统限制——小组件按系统管理的时间表刷新，无法实时更新。点击小组件即可获取最新时间。">
-      <strong>Note:</strong> The minutes countdown may sometimes appear stale on the lock screen. This is an iOS limitation — widgets refresh on a system-managed schedule and cannot update in real time. Tap the widget to get the latest timing.
     </div>
   </div>
 
@@ -356,7 +439,19 @@
     var cachedScript = null;
     var currentLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
 
-    fetch(SCRIPT_URL).then(function(r) { return r.text(); }).then(function(t) { cachedScript = t; });
+    function detectPlatform() {
+      var ua = navigator.userAgent;
+      if (/iPhone|iPad|iPod/.test(ua)) return 'ios';
+      if (/Android/.test(ua)) return 'android';
+      return 'desktop';
+    }
+
+    function switchPlatform(platform) {
+      document.getElementById('tabIos').classList.toggle('active', platform === 'ios');
+      document.getElementById('tabAndroid').classList.toggle('active', platform === 'android');
+      document.getElementById('contentIos').classList.toggle('active', platform === 'ios');
+      document.getElementById('contentAndroid').classList.toggle('active', platform === 'android');
+    }
 
     function setLang(lang) {
       currentLang = lang;
@@ -419,9 +514,15 @@
     }
 
     (function() {
-      var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-      if (!isIOS) {
+      var platform = detectPlatform();
+      if (platform === 'desktop') {
         document.getElementById('desktopMsg').style.display = 'block';
+        switchPlatform('ios');
+      } else {
+        switchPlatform(platform);
+      }
+      if (platform === 'ios') {
+        fetch(SCRIPT_URL).then(function(r) { return r.text(); }).then(function(t) { cachedScript = t; });
       }
       setLang(currentLang);
     })();
