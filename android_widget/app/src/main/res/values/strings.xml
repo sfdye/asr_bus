@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ASR Bus Widget</string>
+    <string name="widget_description">Shows next shuttle bus arrival time</string>
+</resources>
