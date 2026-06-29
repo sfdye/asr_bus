@@ -47,11 +47,17 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradle
   && PATH="/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin:$PATH" \
      /Users/lwan/Library/Android/sdk/build-tools/37.0.0/apksigner sign \
      --ks ~/asr-bus-widget.jks --ks-key-alias asrbus \
-     --out ~/Desktop/"ASR Bus Widget.apk" ~/Desktop/ASR-Bus-Widget-aligned.apk \
+     --out ~/Desktop/ASR-Bus-Widget.apk ~/Desktop/ASR-Bus-Widget-aligned.apk \
   && rm ~/Desktop/ASR-Bus-Widget-aligned.apk
 ```
 
-The signed APK will be at `~/Desktop/ASR Bus Widget.apk`.
+The signed APK will be at `~/Desktop/ASR-Bus-Widget.apk`.
+
+### Publish to GitHub Releases
+
+```bash
+gh release create v1.x ~/Desktop/ASR-Bus-Widget.apk --title "ASR Bus Widget v1.x" --notes "Release notes here."
+```
 
 ### Keystore
 
@@ -63,4 +69,4 @@ The signing keystore (`asr-bus-widget.jks`) is not committed to the repo. To gen
 
 ## Distribution
 
-Share the signed APK directly (Telegram, WhatsApp, GitHub Release). Users install by tapping the file and enabling "Install from unknown sources" if prompted.
+Download the latest APK from [GitHub Releases](https://github.com/sfdye/asr_bus/releases). Users install by tapping the file and enabling "Install from unknown sources" if prompted.
