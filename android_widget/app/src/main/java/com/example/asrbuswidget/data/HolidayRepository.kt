@@ -31,8 +31,8 @@ class HolidayRepository(private val context: Context) {
 
     private fun fetchFromNetwork(): String {
         val connection = URL(url).openConnection() as HttpURLConnection
-        connection.connectTimeout = 5000
-        connection.readTimeout = 5000
+        connection.connectTimeout = 3000
+        connection.readTimeout = 3000
         return try {
             connection.inputStream.bufferedReader().readText()
         } finally {

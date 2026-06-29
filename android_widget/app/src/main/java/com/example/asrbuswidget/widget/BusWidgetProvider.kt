@@ -57,25 +57,36 @@ class BusWidgetProvider : AppWidgetProvider() {
         cancelUpdates(context)
     }
 
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        for (id in appWidgetIds) {
+            deleteStopPref(context, id)
+        }
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == ACTION_REFRESH) {
-            val forceRefresh = intent.getBooleanExtra(EXTRA_FORCE_REFRESH, false)
-            val pendingResult = goAsync()
-            Thread {
-                try {
-                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                    val ids = appWidgetManager.getAppWidgetIds(
-                        ComponentName(context, BusWidgetProvider::class.java)
-                    )
-                    for (id in ids) {
-                        updateWidget(context, appWidgetManager, id, forceRefresh)
+        when (intent.action) {
+            ACTION_REFRESH -> {
+                val forceRefresh = intent.getBooleanExtra(EXTRA_FORCE_REFRESH, false)
+                val pendingResult = goAsync()
+                Thread {
+                    try {
+                        val appWidgetManager = AppWidgetManager.getInstance(context)
+                        val ids = appWidgetManager.getAppWidgetIds(
+                            ComponentName(context, BusWidgetProvider::class.java)
+                        )
+                        for (id in ids) {
+                            updateWidget(context, appWidgetManager, id, forceRefresh)
+                        }
+                    } finally {
+                        pendingResult.finish()
                     }
-                } finally {
-                    pendingResult.finish()
-                }
-            }.start()
-            scheduleNextUpdate(context)
+                }.start()
+                scheduleNextUpdate(context)
+            }
+            Intent.ACTION_BOOT_COMPLETED -> {
+                scheduleNextUpdate(context)
+            }
         }
     }
 
@@ -178,14 +189,20 @@ class BusWidgetProvider : AppWidgetProvider() {
         private fun resolveStop(context: Context, stopKey: String): String {
             if (stopKey != "auto") return stopKey
             return try {
-                val hasPerm = androidx.core.content.ContextCompat.checkSelfPermission(
+                val hasFine = androidx.core.content.ContextCompat.checkSelfPermission(
+                    context, android.Manifest.permission.ACCESS_FINE_LOCATION
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                val hasCoarse = androidx.core.content.ContextCompat.checkSelfPermission(
                     context, android.Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                if (!hasPerm) return "asr"
+                if (!hasFine && !hasCoarse) return "asr"
 
                 val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
 
-                var location = locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                var location: android.location.Location? = null
+                if (hasFine) {
+                    location = locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                }
                 if (location == null) {
                     location = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
                 }
@@ -207,13 +224,13 @@ class BusWidgetProvider : AppWidgetProvider() {
                         override fun onProviderDisabled(p: String) {}
                     }
                     val provider = when {
-                        locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) -> android.location.LocationManager.GPS_PROVIDER
+                        hasFine && locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) -> android.location.LocationManager.GPS_PROVIDER
                         locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER) -> android.location.LocationManager.NETWORK_PROVIDER
                         else -> null
                     }
                     if (provider != null) {
                         locationManager.requestSingleUpdate(provider, listener, android.os.Looper.getMainLooper())
-                        latch.await(5, java.util.concurrent.TimeUnit.SECONDS)
+                        latch.await(3, java.util.concurrent.TimeUnit.SECONDS)
                         location = freshLocation
                     }
                 }
