@@ -68,7 +68,25 @@ export TOKEN=your_bot_token_here
 uv run python bus_bot.py
 ```
 
-Deployed on Raspberry Pi 4 via supervisord. See `bus_bot.py` for source.
+### Deployment
+
+Deployed on Raspberry Pi 4 via supervisord:
+
+```bash
+ssh raspberrypi.local
+
+cat /etc/supervisor/conf.d/asr_bus.conf
+
+[program:asr_bus]
+user=pi
+directory=/home/pi/Code/asr_bus
+command=/home/pi/.local/bin/uv run python bus_bot.py
+
+autostart=true
+autorestart=true
+stdout_logfile=/home/pi/Code/asr_bus/stdout.log
+stderr_logfile=/home/pi/Code/asr_bus/stderr.log
+```
 
 ---
 
