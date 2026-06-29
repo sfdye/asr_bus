@@ -11,13 +11,14 @@ class HolidayRepository(private val context: Context) {
     private val url = "https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/holidays.json"
     private val cacheFileName = "holidays_cache.json"
     private val cacheMaxAgeMs = 7 * 24 * 60 * 60 * 1000L
+    private val forceCooldownMs = 5 * 60 * 1000L
 
     fun getHolidays(forceRefresh: Boolean = false): Map<String, List<String>>? {
-        if (!forceRefresh) {
-            val cacheFile = File(context.filesDir, cacheFileName)
-            if (cacheFile.exists() && System.currentTimeMillis() - cacheFile.lastModified() < cacheMaxAgeMs) {
-                return loadFromCache()
-            }
+        val cacheFile = File(context.filesDir, cacheFileName)
+        if (cacheFile.exists()) {
+            val cacheAge = System.currentTimeMillis() - cacheFile.lastModified()
+            val maxAge = if (forceRefresh) forceCooldownMs else cacheMaxAgeMs
+            if (cacheAge < maxAge) return loadFromCache()
         }
         return try {
             val json = fetchFromNetwork()
