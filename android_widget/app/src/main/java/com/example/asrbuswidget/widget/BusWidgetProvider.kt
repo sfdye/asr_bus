@@ -60,6 +60,7 @@ class BusWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_REFRESH) {
+            val forceRefresh = intent.getBooleanExtra(EXTRA_FORCE_REFRESH, false)
             val pendingResult = goAsync()
             Thread {
                 try {
@@ -68,7 +69,7 @@ class BusWidgetProvider : AppWidgetProvider() {
                         ComponentName(context, BusWidgetProvider::class.java)
                     )
                     for (id in ids) {
-                        updateWidget(context, appWidgetManager, id)
+                        updateWidget(context, appWidgetManager, id, forceRefresh)
                     }
                 } finally {
                     pendingResult.finish()
@@ -80,6 +81,7 @@ class BusWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_REFRESH = "com.example.asrbuswidget.ACTION_REFRESH"
+        private const val EXTRA_FORCE_REFRESH = "force_refresh"
         private const val PREFS_NAME = "com.example.asrbuswidget.widget"
         private const val PREF_STOP_PREFIX = "stop_"
         private const val PREF_SCALE_PREFIX = "scale_"
@@ -129,13 +131,13 @@ class BusWidgetProvider : AppWidgetProvider() {
             return sizeScale * userScale
         }
 
-        fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+        fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, forceRefresh: Boolean = false) {
             val stopKey = loadStopPref(context, appWidgetId)
             val isAuto = stopKey == "auto"
             val resolvedStop = resolveStop(context, stopKey)
 
             val holidays = try {
-                HolidayRepository(context).getHolidays()
+                HolidayRepository(context).getHolidays(forceRefresh)
             } catch (_: Exception) {
                 null
             }
@@ -162,6 +164,7 @@ class BusWidgetProvider : AppWidgetProvider() {
 
             val refreshIntent = Intent(context, BusWidgetProvider::class.java).apply {
                 action = ACTION_REFRESH
+                putExtra(EXTRA_FORCE_REFRESH, true)
             }
             val pendingIntent = PendingIntent.getBroadcast(
                 context, 0, refreshIntent,

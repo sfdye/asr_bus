@@ -12,10 +12,12 @@ class HolidayRepository(private val context: Context) {
     private val cacheFileName = "holidays_cache.json"
     private val cacheMaxAgeMs = 7 * 24 * 60 * 60 * 1000L
 
-    fun getHolidays(): Map<String, List<String>>? {
-        val cacheFile = File(context.filesDir, cacheFileName)
-        if (cacheFile.exists() && System.currentTimeMillis() - cacheFile.lastModified() < cacheMaxAgeMs) {
-            return loadFromCache()
+    fun getHolidays(forceRefresh: Boolean = false): Map<String, List<String>>? {
+        if (!forceRefresh) {
+            val cacheFile = File(context.filesDir, cacheFileName)
+            if (cacheFile.exists() && System.currentTimeMillis() - cacheFile.lastModified() < cacheMaxAgeMs) {
+                return loadFromCache()
+            }
         }
         return try {
             val json = fetchFromNetwork()
