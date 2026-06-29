@@ -10,7 +10,7 @@ class HolidayRepository(private val context: Context) {
 
     private val url = "https://raw.githubusercontent.com/sfdye/asr_bus/master/ios_widget/holidays.json"
     private val cacheFileName = "holidays_cache.json"
-    private val cacheMaxAgeMs = 24 * 60 * 60 * 1000L
+    private val cacheMaxAgeMs = 7 * 24 * 60 * 60 * 1000L
 
     fun getHolidays(): Map<String, List<String>>? {
         val cacheFile = File(context.filesDir, cacheFileName)
