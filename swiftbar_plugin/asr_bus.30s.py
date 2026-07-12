@@ -18,8 +18,8 @@ from zoneinfo import ZoneInfo
 SG_TZ = ZoneInfo("Asia/Singapore")
 
 # Menu bar item only visible during this window (SGT hours, 24h format)
-VISIBLE_START = 16
-VISIBLE_END = 19
+VISIBLE_START = 14
+VISIBLE_END = 18
 
 STOPS = {
     "asr": {"name": "ASR", "emoji": "🏠", "offset": 0, "lat": 1.276626, "lon": 103.830288},
