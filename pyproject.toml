@@ -6,7 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "python-telegram-bot==22.7",
     "python-dotenv==1.2.2",
-    "holidays==0.95",
+    "holidays==0.98",
 ]
 
 [tool.pytest.ini_options]
