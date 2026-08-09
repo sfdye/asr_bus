@@ -16,7 +16,7 @@ asyncio_mode = "auto"
 dev = [
     "pre-commit>=4.6.0",
     "pytest>=8",
-    "pytest-asyncio>=0.24",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.15.12",
 ]
 
