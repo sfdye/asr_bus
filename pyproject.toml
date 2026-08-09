@@ -17,7 +17,7 @@ dev = [
     "pre-commit>=4.6.0",
     "pytest>=8",
     "pytest-asyncio>=0.24",
-    "ruff>=0.15.12",
+    "ruff>=0.15.17",
 ]
 
 [tool.ruff]
